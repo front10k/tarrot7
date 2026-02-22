@@ -1,0 +1,7 @@
+name = "tarrot"
+main = "worker.js"
+compatibility_date = "2025-01-15"
+
+[assets]
+directory = "."
+not_found_handling = "404-page"

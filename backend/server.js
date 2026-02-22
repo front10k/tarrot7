@@ -20,6 +20,45 @@ const MIME = {
   '.json': 'application/json; charset=utf-8',
 };
 
+const MAX_API_BODY_BYTES = 100_000;
+
+function buildSecurityHeaders() {
+  return {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'no-referrer',
+    'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+  };
+}
+
+function splitCsv(value) {
+  return normalizeText(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getAllowedOrigins(requestOrigin) {
+  const configured = splitCsv(process.env.ALLOWED_ORIGINS || '');
+  if (configured.length > 0) {
+    return new Set(configured);
+  }
+  return new Set([requestOrigin, 'http://localhost:8000', 'http://127.0.0.1:8000']);
+}
+
+function buildCorsHeaders(origin, allowedOrigins) {
+  if (!origin || !allowedOrigins.has(origin)) {
+    return {};
+  }
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-API-Key',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
+  };
+}
+
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) {
     return;
@@ -42,8 +81,12 @@ function loadEnvFile(filePath) {
   }
 }
 
-function sendJson(res, code, body) {
-  res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8' });
+function sendJson(res, code, body, extraHeaders = {}) {
+  res.writeHead(code, {
+    'Content-Type': 'application/json; charset=utf-8',
+    ...buildSecurityHeaders(),
+    ...extraHeaders,
+  });
   res.end(JSON.stringify(body));
 }
 
@@ -176,10 +219,16 @@ async function callOpenAI(payload) {
 function readJsonBody(req) {
   return new Promise((resolve, reject) => {
     let raw = '';
+    let aborted = false;
     req.on('data', (chunk) => {
+      if (aborted) {
+        return;
+      }
       raw += chunk;
-      if (raw.length > 1_000_000) {
+      if (raw.length > MAX_API_BODY_BYTES) {
+        aborted = true;
         reject(new Error('요청 본문이 너무 큽니다.'));
+        req.destroy();
       }
     });
     req.on('end', () => {
@@ -213,19 +262,66 @@ function sendStatic(reqPath, res) {
     res.writeHead(200, {
       'Content-Type': contentType,
       'Cache-Control': 'no-store',
+      ...buildSecurityHeaders(),
     });
     fs.createReadStream(filePath).pipe(res);
   });
+}
+
+function validateApiRequest(req, allowedOrigins) {
+  const origin = normalizeText(req.headers.origin || '');
+  if (origin && !allowedOrigins.has(origin)) {
+    return { status: 403, message: '허용되지 않은 Origin입니다.' };
+  }
+
+  const expectedApiKey = normalizeText(process.env.INTERNAL_API_KEY || '');
+  if (expectedApiKey) {
+    const providedApiKey = normalizeText(req.headers['x-api-key'] || '');
+    if (!providedApiKey || providedApiKey !== expectedApiKey) {
+      return { status: 401, message: 'API 인증에 실패했습니다.' };
+    }
+  }
+
+  const contentType = normalizeText(req.headers['content-type'] || '').toLowerCase();
+  if (!contentType.includes('application/json')) {
+    return { status: 415, message: 'Content-Type은 application/json 이어야 합니다.' };
+  }
+
+  const contentLength = Number(req.headers['content-length'] || '0');
+  if (Number.isFinite(contentLength) && contentLength > MAX_API_BODY_BYTES) {
+    return { status: 413, message: '요청 본문이 너무 큽니다.' };
+  }
+
+  return null;
 }
 
 loadEnvFile(ENV_FILE);
 
 const server = http.createServer(async (req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const requestOrigin = `http://${req.headers.host || 'localhost'}`;
+  const allowedOrigins = getAllowedOrigins(requestOrigin);
+  const corsHeaders = buildCorsHeaders(req.headers.origin, allowedOrigins);
+
+  if (requestUrl.pathname === '/api/analyze' && req.method === 'OPTIONS') {
+    res.writeHead(204, {
+      ...buildSecurityHeaders(),
+      ...corsHeaders,
+      Allow: 'POST, OPTIONS',
+    });
+    res.end();
+    return;
+  }
 
   if (req.method === 'POST' && requestUrl.pathname === '/api/analyze') {
+    const validationError = validateApiRequest(req, allowedOrigins);
+    if (validationError) {
+      sendJson(res, validationError.status, { error: validationError.message }, corsHeaders);
+      return;
+    }
+
     const payload = await readJsonBody(req).catch((error) => {
-      sendJson(res, 400, { error: error.message || '요청 본문 오류' });
+      sendJson(res, 400, { error: error.message || '요청 본문 오류' }, corsHeaders);
       return null;
     });
     if (!payload) {
@@ -234,14 +330,14 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const analysis = await callOpenAI(payload);
-      sendJson(res, 200, { analysis, source: 'openai' });
+      sendJson(res, 200, { analysis, source: 'openai' }, corsHeaders);
     } catch (error) {
       const analysis = fallbackAnalysis(payload);
       sendJson(res, 200, {
         analysis,
         source: 'fallback',
-        warning: error.message || 'OpenAI 분석 실패로 fallback 결과를 반환합니다.',
-      });
+        warning: '분석 엔진 오류로 fallback 결과를 반환합니다.',
+      }, corsHeaders);
     }
     return;
   }
@@ -251,7 +347,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  sendJson(res, 405, { error: '허용되지 않은 메서드입니다.' });
+  sendJson(res, 405, { error: '허용되지 않은 메서드입니다.' }, corsHeaders);
 });
 
 server.listen(PORT, () => {
