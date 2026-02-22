@@ -1,48 +1,13 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tarrot7</title>
-    <style>
-      body {
-        margin: 0;
-        font-family: sans-serif;
-        background: #f6f8fb;
-        color: #0f172a;
-        display: grid;
-        place-items: center;
-        min-height: 100vh;
-      }
-      .card {
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 24px;
-        width: min(560px, 92vw);
-      }
-      h1 {
-        margin: 0 0 10px;
-        font-size: 22px;
-      }
-      p {
-        margin: 0;
-        line-height: 1.5;
-      }
-      code {
-        background: #f1f5f9;
-        border-radius: 6px;
-        padding: 2px 6px;
-      }
-    </style>
   </head>
   <body>
-    <main class="card">
-      <h1>tarrot7 Firebase Deploy Ready</h1>
-      <p>
-        This repository now has a valid <code>package.json</code> and
-        <code>npm run build</code> output to <code>dist/</code>.
-      </p>
-    </main>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
