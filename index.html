@@ -93,7 +93,7 @@
         body {
             font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
             -webkit-font-smoothing: antialiased;
-            min-height: max(884px, 100dvh);
+            min-height: 100dvh;
         }
         .text-gradient {
             background: linear-gradient(135deg, #7f13ec 0%, #b06bf7 100%);
@@ -173,11 +173,6 @@
             word-break: keep-all;
         }
     </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
   </head>
 <body>
     <div id="root" style="min-height:100vh; display:flex; align-items:center; justify-content:center; color:#111; font-family: 'Plus Jakarta Sans','Noto Sans KR',sans-serif;">
@@ -196,13 +191,21 @@
         const { HashRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
 
         // --- Components ---
+        const APP_OUTER_CLASS = 'bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-[100dvh] h-[100dvh] flex justify-center overflow-hidden w-full';
+        const APP_FRAME_CLASS = 'relative w-full max-w-[430px] min-h-[100dvh] h-[100dvh] max-h-[100dvh] bg-background-light dark:bg-background-dark flex flex-col overflow-hidden shadow-2xl';
+        const AppScreen = ({ children, outerClassName = '', frameClassName = '' }) => (
+            <div className={`${APP_OUTER_CLASS} ${outerClassName}`.trim()}>
+                <div className={`${APP_FRAME_CLASS} ${frameClassName}`.trim()}>
+                    {children}
+                </div>
+            </div>
+        );
 
         // 1. Landing Screen
         const LandingScreen = () => {
             const navigate = useNavigate();
             return (
-                <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 h-screen min-h-screen flex justify-center overflow-hidden">
-                    <div className="w-full max-w-[430px] h-screen min-h-screen flex flex-col overflow-hidden">
+                <AppScreen frameClassName="text-slate-900 dark:text-slate-100">
                     <nav className="flex items-center justify-between p-6 z-10 relative">
                         <button className="flex items-center justify-center p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
                             <span className="material-symbols-outlined text-slate-900 dark:text-slate-100" style={{ fontSize: '28px' }}>menu</span>
@@ -250,8 +253,7 @@
                             </button>
                         </div>
                     </footer>
-                </div>
-                </div>
+                </AppScreen>
             );
         };
 
@@ -273,8 +275,7 @@
             const formattedTime = isUnknownTime ? '시간 모름' : `${hour}:${minute}`;
 
             return (
-                <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 h-screen min-h-screen flex justify-center w-full">
-                    <div className="relative w-full max-w-[430px] h-screen min-h-screen bg-background-light dark:bg-background-dark flex flex-col overflow-hidden shadow-2xl">
+                <AppScreen frameClassName="text-slate-900 dark:text-slate-100">
                         <header className="flex items-center px-4 py-4 sticky top-0 z-20 bg-background-light dark:bg-background-dark">
                             <button 
                                 onClick={() => navigate(-1)}
@@ -461,8 +462,7 @@
                                 개인정보는 서비스 이용 후 즉시 파기됩니다.
                             </p>
                         </div>
-                    </div>
-                </div>
+                </AppScreen>
             );
         };
 
@@ -674,8 +674,7 @@
             };
 
             return (
-                <div className="bg-background-light dark:bg-background-dark font-sans antialiased text-text-main dark:text-slate-100 h-screen min-h-screen flex justify-center selection:bg-primary selection:text-white">
-                    <div className="w-full max-w-[430px] bg-background-light dark:bg-background-dark h-screen min-h-screen flex flex-col relative overflow-hidden shadow-2xl">
+                <AppScreen outerClassName="font-sans antialiased selection:bg-primary selection:text-white" frameClassName="text-text-main dark:text-slate-100">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" data-alt="Soft purple glow decorative element"></div>
                         <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none" data-alt="Soft purple glow decorative element"></div>
                         <header className="relative z-10 pt-6 px-6 pb-4">
@@ -751,8 +750,7 @@
                                 <span className="text-[15px] font-bold tracking-wide">이전 화면</span>
                             </button>
                         </footer>
-                    </div>
-                </div>
+                </AppScreen>
             );
         };
 
@@ -1196,8 +1194,7 @@
             };
 
             return (
-                <div className="bg-background-light dark:bg-background-dark h-screen min-h-screen flex justify-center">
-                    <div className="w-full max-w-[430px] h-screen min-h-screen flex flex-col relative overflow-hidden shadow-2xl">
+                <AppScreen>
                         <header className="flex items-center justify-between p-4 pb-2">
                             <button
                                 onClick={() => navigate(-1)}
@@ -1310,8 +1307,7 @@
                             </p>
                         </div>
                         <CardDetailModal card={detailCard} onClose={() => setDetailCard(null)} />
-                    </div>
-                </div>
+                </AppScreen>
             );
         };
 
@@ -1334,7 +1330,7 @@
                     label: '오로라 해안',
                     badge: 'AURORA BAY / COAST',
                     type: '회복 균형형',
-                    image: 'assets/images/result/photo_aurora_bay.jpg',
+                    image: 'assets/images/result/character_jeju_coast.svg',
                     adj: '결을 정리하는',
                     tone: 'cool',
                     summary: '잔잔한 흐름 속에서 감정의 결을 정리하고 회복을 우선할 때입니다.',
@@ -1344,7 +1340,7 @@
                     label: '한강 라인',
                     badge: 'HAN RIVER / CITY',
                     type: '속도 상승형',
-                    image: 'assets/images/result/photo_han_river.jpg',
+                    image: 'assets/images/result/character_city_twilight.svg',
                     adj: '판을 키우는',
                     tone: 'neutral',
                     summary: '확장과 집중이 동시에 필요한 날입니다. 핵심 성과를 전면에 두세요.',
@@ -1354,7 +1350,7 @@
                     label: '소나무 능선',
                     badge: 'PINE RIDGE / MOUNTAIN',
                     type: '정돈 집중형',
-                    image: 'assets/images/result/photo_pine_ridge.jpg',
+                    image: 'assets/images/result/character_mountain_mist.svg',
                     adj: '안개를 걷는',
                     tone: 'mist',
                     summary: '과한 확장보다 구조 정리가 우선인 흐름입니다.',
@@ -1364,7 +1360,7 @@
                     label: '야시장 거리',
                     badge: 'NIGHT MARKET / CITY',
                     type: '기회 확장형',
-                    image: 'assets/images/result/photo_night_market.jpg',
+                    image: 'assets/images/result/character_city_twilight.svg',
                     adj: '빛을 모으는',
                     tone: 'warm',
                     summary: '사람과 기회가 모이는 흐름입니다. 연결을 넓히세요.',
@@ -1374,7 +1370,7 @@
                     label: '새벽 들판',
                     badge: 'DAWN FIELD / COAST',
                     type: '리듬 회복형',
-                    image: 'assets/images/result/photo_dawn_field.jpg',
+                    image: 'assets/images/result/character_jeju_coast.svg',
                     adj: '호흡을 맞추는',
                     tone: 'soft',
                     summary: '무리보다 리듬을 되찾는 것이 핵심인 날입니다.',
@@ -1384,7 +1380,7 @@
                     label: '구름 고개',
                     badge: 'CLOUD PASS / MOUNTAIN',
                     type: '전환 준비형',
-                    image: 'assets/images/result/photo_cloud_pass.jpg',
+                    image: 'assets/images/result/character_mountain_mist.svg',
                     adj: '길을 다시 잡는',
                     tone: 'mist',
                     summary: '방향을 다시 잡는 시기입니다. 큰 결정을 늦춰도 좋습니다.',
@@ -1394,7 +1390,7 @@
                     label: '항구 불빛',
                     badge: 'HARBOR LIGHT / COAST',
                     type: '관계 조율형',
-                    image: 'assets/images/result/photo_harbor_light.jpg',
+                    image: 'assets/images/result/character_jeju_coast.svg',
                     adj: '파도를 읽는',
                     tone: 'cool',
                     summary: '관계의 흐름을 정리하고 신뢰를 쌓기 좋은 날입니다.',
@@ -1404,7 +1400,7 @@
                     label: '스카이라인',
                     badge: 'SKYLINE / CITY',
                     type: '선명 추진형',
-                    image: 'assets/images/result/photo_skyline.jpg',
+                    image: 'assets/images/result/character_city_twilight.svg',
                     adj: '성과를 쌓는',
                     tone: 'neutral',
                     summary: '목표를 더 선명히 보일수록 성과가 빠르게 쌓입니다.',
@@ -1414,7 +1410,7 @@
                     label: '바위 계곡',
                     badge: 'STONE VALLEY / MOUNTAIN',
                     type: '내공 축적형',
-                    image: 'assets/images/result/photo_stone_valley.jpg',
+                    image: 'assets/images/result/character_mountain_mist.svg',
                     adj: '흐름을 다듬는',
                     tone: 'earth',
                     summary: '느리지만 확실한 축적이 가장 강한 무기입니다.',
@@ -1424,7 +1420,7 @@
                     label: '물결 다리',
                     badge: 'TIDE BRIDGE / COAST',
                     type: '연결 강화형',
-                    image: 'assets/images/result/photo_tide_bridge.jpg',
+                    image: 'assets/images/result/character_jeju_coast.svg',
                     adj: '신뢰를 잇는',
                     tone: 'soft',
                     summary: '연결과 협업에서 좋은 흐름이 만들어지는 날입니다.',
@@ -1434,7 +1430,7 @@
                     label: '도심 맥박',
                     badge: 'CITY PULSE / CITY',
                     type: '실행 가속형',
-                    image: 'assets/images/result/photo_city_pulse.jpg',
+                    image: 'assets/images/result/character_city_twilight.svg',
                     adj: '결정을 밀어붙이는',
                     tone: 'warm',
                     summary: '지금은 속도를 올려도 되는 구간입니다.',
@@ -1444,7 +1440,7 @@
                     label: '정상 안개',
                     badge: 'SUMMIT MIST / MOUNTAIN',
                     type: '리셋 정비형',
-                    image: 'assets/images/result/photo_summit_mist.jpg',
+                    image: 'assets/images/result/character_mountain_mist.svg',
                     adj: '방향을 다듬는',
                     tone: 'mist',
                     summary: '흐름을 리셋하고 방향을 정비하는 데 최적인 날입니다.',
@@ -1518,23 +1514,54 @@
                     setIsAnalyzing(true);
                     setAnalysisError('');
                     try {
-                        const response = await fetch('/api/analyze', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: analysisPayload,
-                        });
-                        if (!response.ok) {
-                            const errorBody = await response.json().catch(() => ({}));
-                            throw new Error(errorBody.error || `분석 요청 실패 (HTTP ${response.status})`);
+                        const headers = { 'Content-Type': 'application/json' };
+                        const publicApiKey = (window.__PUBLIC_API_KEY || '').trim();
+                        if (publicApiKey) {
+                            headers['X-API-Key'] = publicApiKey;
                         }
-                        const data = await response.json();
+
+                        const baseCandidates = [];
+                        const configuredBase = (window.__API_BASE_URL || '').trim();
+                        if (configuredBase) {
+                            baseCandidates.push(configuredBase.replace(/\/+$/, ''));
+                        }
+                        baseCandidates.push('');
+
+                        let data = null;
+                        let lastError = null;
+                        for (const base of baseCandidates) {
+                            const endpoint = `${base}/api/analyze`;
+                            const response = await fetch(endpoint, {
+                                method: 'POST',
+                                headers,
+                                body: analysisPayload,
+                            });
+                            if (response.ok) {
+                                data = await response.json();
+                                break;
+                            }
+
+                            if (response.status === 404 || response.status === 405) {
+                                lastError = new Error('AI API 경로가 배포에 연결되지 않았습니다.');
+                                continue;
+                            }
+
+                            const errorBody = await response.json().catch(() => ({}));
+                            lastError = new Error(errorBody.error || `분석 요청 실패 (HTTP ${response.status})`);
+                            break;
+                        }
+
+                        if (!data) {
+                            throw (lastError || new Error('AI 분석 요청에 실패했습니다.'));
+                        }
+
                         if (!cancelled) {
                             setAnalysisResult(data.analysis || null);
                         }
                     } catch (error) {
                         if (!cancelled) {
                             setAnalysisResult(null);
-                            setAnalysisError(error?.message || 'AI 분석 중 오류가 발생했습니다.');
+                            setAnalysisError(error?.message || 'AI 연결이 불안정해 기본 해석으로 표시합니다.');
                         }
                     } finally {
                         if (!cancelled) {
@@ -1637,8 +1664,7 @@
             };
 
             return (
-                <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display h-screen min-h-screen flex justify-center selection:bg-primary/30">
-                    <div className="w-full max-w-[430px] bg-background-light dark:bg-background-dark h-screen min-h-screen flex flex-col relative shadow-2xl mx-auto overflow-hidden">
+                <AppScreen outerClassName="selection:bg-primary/30" frameClassName="font-display text-slate-900 dark:text-slate-100 mx-auto">
                         <header className="flex items-center px-4 py-3 sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-100/50 dark:border-slate-800/50">
                             <button
                                 onClick={() => navigate(-1)}
@@ -1779,7 +1805,7 @@
                                 </div>
                             </div>
                         </main>
-                        <div className="fixed bottom-0 left-0 right-0 w-full max-w-[430px] mx-auto p-5 pb-8 bg-gradient-to-t from-background-light via-background-light/95 to-transparent dark:from-background-dark dark:via-background-dark/95 z-40 pointer-events-none h-32 flex items-end">
+                        <div className="absolute bottom-0 left-0 right-0 w-full p-5 pb-8 bg-gradient-to-t from-background-light via-background-light/95 to-transparent dark:from-background-dark dark:via-background-dark/95 z-40 pointer-events-none h-32 flex items-end">
                             <button
                                 onClick={handleShareResult}
                                 className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 px-6 rounded-2xl shadow-glow flex items-center justify-center gap-3 transition-all active:scale-[0.97] pointer-events-auto"
@@ -1788,8 +1814,7 @@
                                 <span className="text-[15px] tracking-wide">분석 결과 공유하기</span>
                             </button>
                         </div>
-                    </div>
-                </div>
+                </AppScreen>
             );
         };
 
