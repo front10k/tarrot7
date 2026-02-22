@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1536" viewBox="0 0 1024 1536">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efe2cb"/>
+      <stop offset="100%" stop-color="#ddc8a7"/>
+    </linearGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5e96b0"/>
+      <stop offset="100%" stop-color="#315d77"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="50%" cy="45%" r="32%">
+      <stop offset="0%" stop-color="#fff8dc" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#fff8dc" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blurSmall"><feGaussianBlur stdDeviation="2.5"/></filter>
+    <pattern id="grain" width="16" height="16" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="3" r="0.8" fill="#c9b394" opacity="0.55"/>
+      <circle cx="12" cy="6" r="0.7" fill="#bda587" opacity="0.45"/>
+      <circle cx="9" cy="14" r="0.9" fill="#d3c0a6" opacity="0.5"/>
+    </pattern>
+  </defs>
+
+  <rect width="1024" height="1536" fill="url(#paper)"/>
+  <rect width="1024" height="1536" fill="url(#grain)" opacity="0.5"/>
+
+  <rect x="58" y="58" width="908" height="1420" rx="42" fill="none" stroke="#1f6e69" stroke-width="15"/>
+  <rect x="84" y="84" width="856" height="1368" rx="32" fill="none" stroke="#ab3c34" stroke-width="7"/>
+  <rect x="100" y="100" width="824" height="1336" rx="26" fill="none" stroke="#cfa55c" stroke-width="4"/>
+
+  <g opacity="0.55" stroke="#3e6f8f" stroke-width="2" fill="none">
+    <path d="M120 330 C260 290, 390 350, 520 320 C670 286, 800 350, 910 320"/>
+    <path d="M120 382 C270 342, 400 402, 530 372 C690 338, 815 402, 910 372"/>
+    <path d="M120 434 C260 398, 390 458, 520 424 C670 392, 800 456, 910 426"/>
+    <path d="M120 486 C270 448, 400 510, 530 478 C690 446, 815 510, 910 478"/>
+  </g>
+
+  <circle cx="512" cy="686" r="320" fill="url(#moonGlow)"/>
+  <circle cx="512" cy="686" r="242" fill="#f7ebc9" opacity="0.68" stroke="#cfa55c" stroke-width="4"/>
+  <circle cx="492" cy="666" r="126" fill="#f1e6be"/>
+  <circle cx="558" cy="662" r="126" fill="#e0cfad"/>
+
+  <g fill="#d7b473" opacity="0.8" filter="url(#blurSmall)">
+    <circle cx="282" cy="560" r="4"/><circle cx="342" cy="516" r="3"/><circle cx="408" cy="584" r="3"/>
+    <circle cx="618" cy="508" r="3"/><circle cx="700" cy="552" r="4"/><circle cx="742" cy="610" r="3"/>
+    <circle cx="296" cy="738" r="3"/><circle cx="364" cy="790" r="4"/><circle cx="696" cy="768" r="3"/>
+  </g>
+
+  <path d="M104 1088 C240 978, 300 986, 432 1088 L104 1088 Z" fill="#4f6775" opacity="0.85"/>
+  <path d="M340 1088 C516 888, 628 908, 782 1088 L340 1088 Z" fill="#3d5564" opacity="0.9"/>
+  <path d="M650 1088 C758 1002, 850 1008, 922 1088 L650 1088 Z" fill="#516a79" opacity="0.85"/>
+  <rect x="104" y="1088" width="818" height="300" fill="url(#sea)" opacity="0.72"/>
+
+  <g stroke="#f3e6c2" stroke-width="2" opacity="0.45" fill="none">
+    <path d="M118 1144 C258 1128, 396 1162, 536 1146 C680 1130, 796 1158, 914 1142"/>
+    <path d="M118 1192 C258 1178, 396 1208, 536 1196 C680 1182, 796 1204, 914 1190"/>
+    <path d="M118 1240 C258 1226, 396 1258, 536 1242 C680 1228, 796 1254, 914 1240"/>
+  </g>
+
+  <g fill="#2f8a81" stroke="#cfa55c" stroke-width="2" opacity="0.92">
+    <ellipse cx="160" cy="160" rx="22" ry="13"/><ellipse cx="188" cy="160" rx="22" ry="13"/><ellipse cx="174" cy="136" rx="22" ry="13"/><ellipse cx="174" cy="184" rx="22" ry="13"/>
+    <ellipse cx="864" cy="160" rx="22" ry="13"/><ellipse cx="836" cy="160" rx="22" ry="13"/><ellipse cx="850" cy="136" rx="22" ry="13"/><ellipse cx="850" cy="184" rx="22" ry="13"/>
+    <ellipse cx="160" cy="1376" rx="22" ry="13"/><ellipse cx="188" cy="1376" rx="22" ry="13"/><ellipse cx="174" cy="1352" rx="22" ry="13"/><ellipse cx="174" cy="1400" rx="22" ry="13"/>
+    <ellipse cx="864" cy="1376" rx="22" ry="13"/><ellipse cx="836" cy="1376" rx="22" ry="13"/><ellipse cx="850" cy="1352" rx="22" ry="13"/><ellipse cx="850" cy="1400" rx="22" ry="13"/>
+  </g>
+</svg>
