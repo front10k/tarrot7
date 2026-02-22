@@ -1,0 +1,12 @@
+{
+  "name": "tarrot7",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal static app for Firebase Hosting GitHub deploy",
+  "scripts": {
+    "build": "mkdir -p dist && cp index.html dist/index.html"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
