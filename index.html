@@ -645,6 +645,7 @@
             const navigate = useNavigate();
             const [currentIndex, setCurrentIndex] = useState(0);
             const [answers, setAnswers] = useState([]);
+            const [selectedChoice, setSelectedChoice] = useState('');
             const [scores, setScores] = useState({
                 action: 0,
                 emotion: 0,
@@ -661,9 +662,18 @@
                 stability: base.stability + delta.stability,
             });
 
+            useEffect(() => {
+                setSelectedChoice('');
+            }, [currentIndex]);
+
             const handleSelect = (choice) => {
-                const nextScores = applyScore(scores, SCORE[choice]);
-                const nextAnswers = [...answers, choice];
+                setSelectedChoice(choice);
+            };
+
+            const handleNextQuestion = () => {
+                if (!selectedChoice) return;
+                const nextScores = applyScore(scores, SCORE[selectedChoice]);
+                const nextAnswers = [...answers, selectedChoice];
                 const isLast = currentIndex + 1 >= QUESTIONS.length;
 
                 setScores(nextScores);
@@ -732,6 +742,7 @@
                                             name={`question_${currentIndex}`}
                                             type="radio"
                                             value={key}
+                                            checked={selectedChoice === key}
                                         />
                                         <div className="card-ring w-full min-h-[88px] flex items-center gap-4 p-5 py-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark transition-all duration-200 hover:border-primary/40 dark:hover:border-primary/40 active:scale-[0.99] shadow-sm">
                                             <div className="flex-1 py-1">
@@ -745,13 +756,24 @@
                                 ))}
                             </section>
                         </main>
-                        <footer className="p-5 pb-10 relative z-10 flex justify-center">
+                        <footer className="p-5 pb-10 relative z-10 flex items-center justify-between gap-3">
                             <button 
                                 onClick={() => navigate(-1)}
                                 className="group flex items-center gap-2 px-6 py-3 rounded-full text-slate-500 hover:text-primary hover:bg-primary/5 transition-all dark:text-slate-400 dark:hover:text-primary"
                             >
                                 <span className="material-symbols-outlined text-lg transition-transform group-hover:-translate-x-1">arrow_back</span>
                                 <span className="text-[15px] font-bold tracking-wide">이전 화면</span>
+                            </button>
+                            <button
+                                onClick={handleNextQuestion}
+                                disabled={!selectedChoice}
+                                className={`h-12 px-6 rounded-2xl font-bold text-[15px] transition-all ${
+                                    selectedChoice
+                                        ? 'bg-primary text-white shadow-glow active:scale-[0.98]'
+                                        : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-500'
+                                }`}
+                            >
+                                다음
                             </button>
                         </footer>
                 </AppScreen>
