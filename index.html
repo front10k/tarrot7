@@ -1334,7 +1334,7 @@
                     label: '오로라 해안',
                     badge: 'AURORA BAY / COAST',
                     type: '회복 균형형',
-                    image: 'assets/images/result/character_jeju_coast.svg',
+                    image: '/assets/images/result/character_jeju_coast.svg',
                     adj: '결을 정리하는',
                     tone: 'cool',
                     summary: '잔잔한 흐름 속에서 감정의 결을 정리하고 회복을 우선할 때입니다.',
@@ -1344,7 +1344,7 @@
                     label: '한강 라인',
                     badge: 'HAN RIVER / CITY',
                     type: '속도 상승형',
-                    image: 'assets/images/result/character_city_twilight.svg',
+                    image: '/assets/images/result/character_city_twilight.svg',
                     adj: '판을 키우는',
                     tone: 'neutral',
                     summary: '확장과 집중이 동시에 필요한 날입니다. 핵심 성과를 전면에 두세요.',
@@ -1354,7 +1354,7 @@
                     label: '소나무 능선',
                     badge: 'PINE RIDGE / MOUNTAIN',
                     type: '정돈 집중형',
-                    image: 'assets/images/result/character_mountain_mist.svg',
+                    image: '/assets/images/result/character_mountain_mist.svg',
                     adj: '안개를 걷는',
                     tone: 'mist',
                     summary: '과한 확장보다 구조 정리가 우선인 흐름입니다.',
@@ -1364,7 +1364,7 @@
                     label: '야시장 거리',
                     badge: 'NIGHT MARKET / CITY',
                     type: '기회 확장형',
-                    image: 'assets/images/result/character_city_twilight.svg',
+                    image: '/assets/images/result/character_city_twilight.svg',
                     adj: '빛을 모으는',
                     tone: 'warm',
                     summary: '사람과 기회가 모이는 흐름입니다. 연결을 넓히세요.',
@@ -1374,7 +1374,7 @@
                     label: '새벽 들판',
                     badge: 'DAWN FIELD / COAST',
                     type: '리듬 회복형',
-                    image: 'assets/images/result/character_jeju_coast.svg',
+                    image: '/assets/images/result/character_jeju_coast.svg',
                     adj: '호흡을 맞추는',
                     tone: 'soft',
                     summary: '무리보다 리듬을 되찾는 것이 핵심인 날입니다.',
@@ -1384,7 +1384,7 @@
                     label: '구름 고개',
                     badge: 'CLOUD PASS / MOUNTAIN',
                     type: '전환 준비형',
-                    image: 'assets/images/result/character_mountain_mist.svg',
+                    image: '/assets/images/result/character_mountain_mist.svg',
                     adj: '길을 다시 잡는',
                     tone: 'mist',
                     summary: '방향을 다시 잡는 시기입니다. 큰 결정을 늦춰도 좋습니다.',
@@ -1394,7 +1394,7 @@
                     label: '항구 불빛',
                     badge: 'HARBOR LIGHT / COAST',
                     type: '관계 조율형',
-                    image: 'assets/images/result/character_jeju_coast.svg',
+                    image: '/assets/images/result/character_jeju_coast.svg',
                     adj: '파도를 읽는',
                     tone: 'cool',
                     summary: '관계의 흐름을 정리하고 신뢰를 쌓기 좋은 날입니다.',
@@ -1404,7 +1404,7 @@
                     label: '스카이라인',
                     badge: 'SKYLINE / CITY',
                     type: '선명 추진형',
-                    image: 'assets/images/result/character_city_twilight.svg',
+                    image: '/assets/images/result/character_city_twilight.svg',
                     adj: '성과를 쌓는',
                     tone: 'neutral',
                     summary: '목표를 더 선명히 보일수록 성과가 빠르게 쌓입니다.',
@@ -1414,7 +1414,7 @@
                     label: '바위 계곡',
                     badge: 'STONE VALLEY / MOUNTAIN',
                     type: '내공 축적형',
-                    image: 'assets/images/result/character_mountain_mist.svg',
+                    image: '/assets/images/result/character_mountain_mist.svg',
                     adj: '흐름을 다듬는',
                     tone: 'earth',
                     summary: '느리지만 확실한 축적이 가장 강한 무기입니다.',
@@ -1424,7 +1424,7 @@
                     label: '물결 다리',
                     badge: 'TIDE BRIDGE / COAST',
                     type: '연결 강화형',
-                    image: 'assets/images/result/character_jeju_coast.svg',
+                    image: '/assets/images/result/character_jeju_coast.svg',
                     adj: '신뢰를 잇는',
                     tone: 'soft',
                     summary: '연결과 협업에서 좋은 흐름이 만들어지는 날입니다.',
@@ -1434,7 +1434,7 @@
                     label: '도심 맥박',
                     badge: 'CITY PULSE / CITY',
                     type: '실행 가속형',
-                    image: 'assets/images/result/character_city_twilight.svg',
+                    image: '/assets/images/result/character_city_twilight.svg',
                     adj: '결정을 밀어붙이는',
                     tone: 'warm',
                     summary: '지금은 속도를 올려도 되는 구간입니다.',
@@ -1444,7 +1444,7 @@
                     label: '정상 안개',
                     badge: 'SUMMIT MIST / MOUNTAIN',
                     type: '리셋 정비형',
-                    image: 'assets/images/result/character_mountain_mist.svg',
+                    image: '/assets/images/result/character_mountain_mist.svg',
                     adj: '방향을 다듬는',
                     tone: 'mist',
                     summary: '흐름을 리셋하고 방향을 정비하는 데 최적인 날입니다.',
@@ -1469,6 +1469,15 @@
             const characterNameFallback = `${selectedResult.adj} ${patternAlias[pattern.id] || ''} ${core.label}`.replace(/\s+/g, ' ').trim();
             const summaryFallback = selectedResult.summary || flow.meaning.korea;
             const todayLineFallback = selectedResult.todayLine || `${flow.meaning.archetype} 흐름에서, 당신의 강점은 '${core.meaning.strength[0]}'로 드러납니다. 다만 '${pattern.meaning.caution[0]}'에 주의하세요.`;
+            const localAnalysisFallback = {
+                title: characterNameFallback,
+                summary: summaryFallback,
+                todayLine: todayLineFallback,
+                actions: [
+                    { title: '20분 정리 산책', description: '움직이면서 오늘의 우선순위 3가지를 정리해 보세요.' },
+                    { title: '한 줄 실행 기록', description: '오늘 완료한 1가지를 기록하면 동기 유지에 도움이 됩니다.' },
+                ],
+            };
 
             const [analysisResult, setAnalysisResult] = useState(null);
             const [analysisError, setAnalysisError] = useState('');
@@ -1564,8 +1573,8 @@
                         }
                     } catch (error) {
                         if (!cancelled) {
-                            setAnalysisResult(null);
-                            setAnalysisError(error?.message || 'AI 연결이 불안정해 기본 해석으로 표시합니다.');
+                            setAnalysisResult(localAnalysisFallback);
+                            setAnalysisError('');
                         }
                     } finally {
                         if (!cancelled) {
