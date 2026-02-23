@@ -781,7 +781,7 @@
                 id: 'moon',
                 label: '월',
                 code: 'Moon 03',
-                image: 'assets/images/tarot/traditional_moon.svg',
+                image: '/assets/images/tarot/traditional_moon.svg',
                 backTheme: 'indigo',
                 symbol: 'nights_stay',
                 stateTag: 'recovery',
@@ -799,7 +799,7 @@
                 id: 'sun',
                 label: '태양',
                 code: 'Sun 07',
-                image: 'assets/images/tarot/traditional_sun.svg',
+                image: '/assets/images/tarot/traditional_sun.svg',
                 backTheme: 'amber',
                 symbol: 'wb_sunny',
                 stateTag: 'push',
@@ -817,7 +817,7 @@
                 id: 'star',
                 label: '별',
                 code: 'Star 11',
-                image: 'assets/images/tarot/traditional_star.svg',
+                image: '/assets/images/tarot/traditional_star.svg',
                 backTheme: 'teal',
                 symbol: 'auto_awesome',
                 stateTag: 'transition',
@@ -1196,6 +1196,7 @@
                 pattern: { title: '습관 카드', desc: '당신의 행동 방식(패턴)을 고르세요.' },
                 flow: { title: '흐름 카드', desc: '오늘의 흐름을 닮은 한 장을 고르세요. (마지막 카드가 지역을 결정합니다)' },
             };
+            const revealedTheme = BACK_THEMES[pickedThisStep?.backTheme] || BACK_THEMES.indigo;
 
             return (
                 <AppScreen>
@@ -1299,9 +1300,10 @@
                                 onClick={onNext}
                                 className={`w-full h-14 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
                                     phase === 'revealed'
-                                        ? 'bg-primary text-white shadow-glow active:scale-[0.98]'
+                                        ? 'text-white shadow-glow active:scale-[0.98]'
                                         : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-500'
                                 }`}
+                                style={phase === 'revealed' ? { background: revealedTheme } : undefined}
                             >
                                 <span>{step + 1 >= totalSteps ? '결과 보기' : '다음 카드 뽑기'}</span>
                                 <span className="material-symbols-outlined text-[24px]">arrow_forward</span>
@@ -1690,7 +1692,7 @@
                                 <span className="material-symbols-outlined">more_vert</span>
                             </button>
                         </header>
-                        <main className="flex-1 flex flex-col pb-32 px-5">
+                        <main className="flex-1 flex flex-col overflow-y-auto no-scrollbar pb-32 px-5">
                             <div className="mt-3 mb-2">
                                 <div className="flex justify-between items-end px-1 mb-2">
                                     <span className="text-[11px] font-semibold text-primary/80 uppercase tracking-wider">결과 단계</span>
