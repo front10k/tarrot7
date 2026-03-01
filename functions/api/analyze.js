@@ -6,9 +6,21 @@ function normalizeText(value) {
 
 function fallbackAnalysis(payload) {
   const picked = Array.isArray(payload?.pickedTarots) ? payload.pickedTarots : [];
-  const cards = picked.length > 0 ? picked : ["moon"];
-  const cardLabelMap = { moon: "월", sun: "태양", star: "별" };
-  const cardFlow = cards.map((key) => cardLabelMap[key] || key).join(" -> ");
+  const pickedCards = payload?.pickedCards || {};
+  const formatCard = (card, fallbackId) => {
+    if (!card) return fallbackId || "";
+    const orientation = card.orientation === "reversed" ? "역방향" : "정방향";
+    return `${card.label || fallbackId || "카드"}(${orientation})`;
+  };
+  const labels = [
+    formatCard(pickedCards?.core),
+    formatCard(pickedCards?.pattern),
+    formatCard(pickedCards?.flow),
+  ].filter(Boolean);
+  const pickedIds = picked
+    .map((item) => (typeof item === "string" ? item : item?.id || ""))
+    .filter(Boolean);
+  const cardFlow = labels.length > 0 ? labels.join(" -> ") : pickedIds.join(" -> ") || "카드";
 
   return {
     title: "파도를 읽는 조율가",
@@ -68,6 +80,7 @@ async function callOpenAI(payload, env) {
   const prompt = [
     "당신은 한국어 라이프 코치입니다.",
     "입력된 생년월일시, 설문 벡터, 타로 3장(코어/패턴/흐름) 정보를 바탕으로 짧고 실용적인 해석을 작성하세요.",
+    "각 카드의 정/역방향과 키워드를 반영하세요.",
     "title은 캐릭터 이름처럼 간결하게, todayLine은 1~2문장 요약으로 작성하세요.",
     "반드시 JSON으로만 응답하세요.",
     '스키마: {"title":string,"quote":string,"status":string,"summary":string,"todayLine":string,"strengths":[string,string,string],"actions":[{"title":string,"description":string},{"title":string,"description":string}]}',
