@@ -16,6 +16,7 @@
     
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries,line-clamp"></script>
@@ -190,7 +191,7 @@
 
     <script type="text/babel" data-presets="env,react">
         try {
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
         const { createRoot } = ReactDOM;
         const { HashRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
 
@@ -1404,7 +1405,7 @@
         );
 
         const TAROT78 = [...MAJOR_ARCANA, ...MINOR_ARCANA];
-        const TAROT_BACK_IMAGE = 'card/12sin/1.jpg';
+        const TAROT_BACK_IMAGE = 'front.png';
         const SPREAD = [
             { key: 'past', label: '과거' },
             { key: 'present', label: '현재' },
@@ -2112,7 +2113,7 @@
 
                     <main className="flex-1 px-5 pt-4 pb-28 overflow-y-auto">
                         <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 overflow-x-auto no-scrollbar">
-                            <div className="grid grid-rows-2 grid-flow-col auto-cols-[52px] gap-1.5 min-w-max">
+                            <div className="flex gap-1.5 min-w-max">
                                 {Array.from({ length: 18 }, (_, idx) => (
                                     <div key={idx} className="w-[52px] h-[78px] rounded-lg overflow-hidden border border-slate-300/80 dark:border-slate-600/80 shadow-sm">
                                         <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${TAROT_BACK_IMAGE}')` }}></div>
@@ -2196,6 +2197,7 @@
         const ResultScreen = () => {
             const navigate = useNavigate();
             const location = useLocation();
+            const captureRef = useRef(null);
             const tarotSpread = Array.isArray(location.state?.tarotSpread)
                 ? location.state.tarotSpread
                 : location.state?.tarotPick
@@ -2234,6 +2236,27 @@
 
             const topKeywords = inferKeywords(personalizedScores);
             const axisNarratives = generateAxisNarratives(personalizedScores);
+            const handleSaveStrategyImage = async () => {
+                try {
+                    const target = captureRef.current;
+                    if (!target) return;
+                    if (!window.html2canvas) {
+                        alert('이미지 저장 라이브러리를 찾을 수 없습니다.');
+                        return;
+                    }
+                    const canvas = await window.html2canvas(target, {
+                        scale: 2,
+                        backgroundColor: '#f7f6f8',
+                        useCORS: true,
+                    });
+                    const link = document.createElement('a');
+                    link.href = canvas.toDataURL('image/png');
+                    link.download = `life-position-${zodiac.key}-strategy.png`;
+                    link.click();
+                } catch (error) {
+                    alert('이미지 저장 중 오류가 발생했습니다.');
+                }
+            };
 
             return (
                 <AppScreen>
@@ -2247,7 +2270,7 @@
                         </button>
                     </header>
 
-                    <main className="flex-1 pb-28 px-5 overflow-y-auto">
+                    <main className="flex-1 pb-28 px-5 overflow-y-auto" ref={captureRef}>
                         <div className="mt-5 rounded-3xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
                             <div className="text-xs font-bold text-primary/80 tracking-wider">당신의 동물</div>
                             <h2 className="mt-1 text-3xl font-black text-slate-900 dark:text-white">{zodiac.emoji} {zodiac.label}상</h2>
@@ -2279,14 +2302,17 @@
                                 <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">0~49: 안정/보완, 50~74: 균형, 75~100: 강점 극대화 구간</div>
                                 <div className="mt-4 space-y-3">
                                     {axisNarratives.map((n) => (
-                                        <div key={n.key} className="rounded-xl border border-slate-200/80 dark:border-white/10 p-3 bg-white/60 dark:bg-black/10">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <div className="text-xs font-bold text-slate-700 dark:text-slate-200">{n.label}</div>
-                                                <div className="text-[11px] font-extrabold text-primary">{n.value}</div>
+                                        <div key={n.key} className="rounded-xl border border-slate-200/80 dark:border-white/10 p-4 bg-white/70 dark:bg-black/10 shadow-sm">
+                                            <div className="flex items-center justify-between gap-3 mb-2">
+                                                <div className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{n.label}</div>
+                                                <div className="px-2.5 py-1 rounded-full text-sm font-black bg-primary/12 border border-primary/25 text-primary">{n.value}</div>
                                             </div>
-                                            <p className="text-xs text-slate-700 dark:text-slate-200">강점: {n.strength}</p>
-                                            <p className="mt-1 text-xs text-rose-600 dark:text-rose-300">주의: {n.caution}</p>
-                                            <p className="mt-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">오늘의 1문장 액션: {n.action}</p>
+                                            <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden mb-3">
+                                                <div className="h-full bg-primary rounded-full" style={{ width: `${n.value}%` }}></div>
+                                            </div>
+                                            <p className="text-sm leading-6 text-slate-700 dark:text-slate-200"><b>강점:</b> {n.strength}</p>
+                                            <p className="mt-2 text-sm leading-6 text-rose-600 dark:text-rose-300"><b>주의:</b> {n.caution}</p>
+                                            <p className="mt-2 text-sm leading-6 font-semibold text-emerald-700 dark:text-emerald-300"><b>오늘의 1문장 액션:</b> {n.action}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -2296,8 +2322,8 @@
                             <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
                                 <div className="text-sm font-bold text-slate-900 dark:text-white mb-3">실행 버튼</div>
                                 <div className="grid gap-2">
-                                    <button onClick={() => alert('전략 카드를 저장했습니다.')} className="h-11 rounded-xl bg-primary text-white font-bold">
-                                        내 전략 카드 저장
+                                    <button onClick={handleSaveStrategyImage} className="h-11 rounded-xl bg-primary text-white font-bold">
+                                        내 전략 카드 PNG 저장
                                     </button>
                                     <button onClick={() => alert('3개월 루틴 가이드를 생성했습니다.')} className="h-11 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold">
                                         3개월 루틴 받기
@@ -2347,3 +2373,4 @@
     </script>
 </body>
 </html>
+2
