@@ -6,19 +6,20 @@
     <title>Life Position - 인생 포지션 분석</title>
     
     <!-- React & ReactDOM -->
-    <script defer crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script defer crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
     <!-- React Router -->
-    <script defer src="https://unpkg.com/history@5/umd/history.production.min.js"></script>
-    <script defer src="https://unpkg.com/react-router@6.3.0/umd/react-router.production.min.js"></script>
-    <script defer src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.production.min.js"></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
     
     <!-- Babel -->
-    <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     
     <!-- Tailwind CSS -->
-    <script defer src="https://cdn.tailwindcss.com?plugins=forms,container-queries,line-clamp"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries,line-clamp"></script>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
@@ -1404,7 +1405,7 @@
         );
 
         const TAROT78 = [...MAJOR_ARCANA, ...MINOR_ARCANA];
-        const TAROT_BACK_IMAGE = 'card_back_purple.svg';
+        const TAROT_BACK_IMAGE = 'front.png';
         const SPREAD = [
             { key: 'past', label: '과거' },
             { key: 'present', label: '현재' },
@@ -1692,25 +1693,6 @@
                 .sort((a, b) => (scores[b.key] || 0) - (scores[a.key] || 0))
                 .slice(0, 3)
                 .map((axis) => `#${keywordMap[axis.key]}`);
-        };
-
-        const loadHtml2Canvas = () => {
-            if (window.html2canvas) return Promise.resolve(window.html2canvas);
-            return new Promise((resolve, reject) => {
-                const existing = document.querySelector('script[data-html2canvas-loader="1"]');
-                if (existing) {
-                    existing.addEventListener('load', () => resolve(window.html2canvas));
-                    existing.addEventListener('error', reject);
-                    return;
-                }
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js';
-                script.defer = true;
-                script.dataset.html2canvasLoader = '1';
-                script.onload = () => resolve(window.html2canvas);
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
         };
 
         const AXIS = [
@@ -2132,7 +2114,7 @@
                     <main className="flex-1 px-5 pt-4 pb-28 overflow-y-auto">
                         <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 overflow-x-auto no-scrollbar">
                             <div className="flex gap-1.5 min-w-max">
-                                {Array.from({ length: 12 }, (_, idx) => (
+                                {Array.from({ length: 18 }, (_, idx) => (
                                     <div key={idx} className="w-[52px] h-[78px] rounded-lg overflow-hidden border border-slate-300/80 dark:border-slate-600/80 shadow-sm">
                                         <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${TAROT_BACK_IMAGE}')` }}></div>
                                     </div>
@@ -2215,7 +2197,7 @@
         const ResultScreen = () => {
             const navigate = useNavigate();
             const location = useLocation();
-            const exportCardRef = useRef(null);
+            const captureRef = useRef(null);
             const tarotSpread = Array.isArray(location.state?.tarotSpread)
                 ? location.state.tarotSpread
                 : location.state?.tarotPick
@@ -2256,13 +2238,15 @@
             const axisNarratives = generateAxisNarratives(personalizedScores);
             const handleSaveStrategyImage = async () => {
                 try {
-                    const target = exportCardRef.current;
+                    const target = captureRef.current;
                     if (!target) return;
-                    const html2canvas = await loadHtml2Canvas();
-                    if (!html2canvas) throw new Error('html2canvas unavailable');
-                    const canvas = await html2canvas(target, {
-                        scale: 3,
-                        backgroundColor: '#f8f6f2',
+                    if (!window.html2canvas) {
+                        alert('이미지 저장 라이브러리를 찾을 수 없습니다.');
+                        return;
+                    }
+                    const canvas = await window.html2canvas(target, {
+                        scale: 2,
+                        backgroundColor: '#f7f6f8',
                         useCORS: true,
                     });
                     const link = document.createElement('a');
@@ -2276,66 +2260,6 @@
 
             return (
                 <AppScreen>
-                    <div className="fixed -left-[99999px] top-0 pointer-events-none">
-                        <div
-                            ref={exportCardRef}
-                            style={{
-                                width: '1080px',
-                                minHeight: '1500px',
-                                padding: '64px',
-                                background: 'linear-gradient(160deg, #f8f6f2 0%, #efe8dc 55%, #e7dccb 100%)',
-                                color: '#2f2415',
-                                fontFamily: "'Noto Sans KR', 'Plus Jakarta Sans', sans-serif",
-                            }}
-                        >
-                            <div style={{ border: '2px solid rgba(97,69,39,0.35)', borderRadius: '28px', padding: '28px 30px', background: 'rgba(255,255,255,0.56)' }}>
-                                <div style={{ fontSize: '20px', fontWeight: 900, letterSpacing: '0.08em', marginBottom: '10px' }}>LIFE POSITION STRATEGY CARD</div>
-                                <div style={{ fontSize: '52px', fontWeight: 900, lineHeight: 1.15 }}>{zodiac.emoji} {zodiac.label}상</div>
-                                <div style={{ marginTop: '10px', fontSize: '28px', fontWeight: 700 }}>{profile.type} · {zodiac.archetype}</div>
-                                <div style={{ marginTop: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                    {topKeywords.map((k) => (
-                                        <span key={k} style={{ fontSize: '20px', fontWeight: 700, padding: '8px 16px', borderRadius: '999px', border: '1px solid rgba(97,69,39,0.25)', background: 'rgba(255,255,255,0.75)' }}>
-                                            {k}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div style={{ marginTop: '22px', borderRadius: '24px', overflow: 'hidden', border: '2px solid rgba(97,69,39,0.25)' }}>
-                                <img src={zodiac.image} alt="" style={{ width: '100%', display: 'block' }} />
-                            </div>
-
-                            <div style={{ marginTop: '22px', border: '2px solid rgba(97,69,39,0.22)', borderRadius: '24px', padding: '24px', background: 'rgba(255,255,255,0.58)' }}>
-                                <div style={{ fontSize: '26px', fontWeight: 900, marginBottom: '14px' }}>6축 개인화 점수</div>
-                                <div style={{ display: 'grid', gap: '12px' }}>
-                                    {AXIS.map((axis) => {
-                                        const v = Math.round(personalizedScores?.[axis.key] ?? 50);
-                                        return (
-                                            <div key={axis.key}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '20px', fontWeight: 700 }}>
-                                                    <span>{axis.label}</span>
-                                                    <span>{v}</span>
-                                                </div>
-                                                <div style={{ height: '14px', borderRadius: '999px', background: 'rgba(97,69,39,0.12)', overflow: 'hidden' }}>
-                                                    <div style={{ width: `${v}%`, height: '100%', borderRadius: '999px', background: 'linear-gradient(90deg, #9f6a31 0%, #d38e44 100%)' }}></div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div style={{ marginTop: '22px', border: '2px solid rgba(97,69,39,0.22)', borderRadius: '24px', padding: '24px', background: 'rgba(255,255,255,0.58)' }}>
-                                <div style={{ fontSize: '26px', fontWeight: 900, marginBottom: '10px' }}>오늘의 1문장 액션 TOP3</div>
-                                {axisNarratives.slice(0, 3).map((n) => (
-                                    <div key={n.key} style={{ fontSize: '21px', lineHeight: 1.5, marginTop: '8px' }}>
-                                        • <b>{n.label}</b>: {n.action}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
                     <header className="flex items-center px-4 py-3 sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-100/50 dark:border-slate-800/50">
                         <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 flex items-center justify-center">
                             <span className="material-symbols-outlined">arrow_back</span>
@@ -2346,7 +2270,7 @@
                         </button>
                     </header>
 
-                    <main className="flex-1 pb-28 px-5 overflow-y-auto">
+                    <main className="flex-1 pb-28 px-5 overflow-y-auto" ref={captureRef}>
                         <div className="mt-5 rounded-3xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
                             <div className="text-xs font-bold text-primary/80 tracking-wider">당신의 동물</div>
                             <h2 className="mt-1 text-3xl font-black text-slate-900 dark:text-white">{zodiac.emoji} {zodiac.label}상</h2>
