@@ -1404,7 +1404,7 @@
         );
 
         const TAROT78 = [...MAJOR_ARCANA, ...MINOR_ARCANA];
-        const TAROT_BACK_IMAGE = 'card_back_purple.svg';
+        const TAROT_BACK_IMAGE = 'card/12sin/1.jpg';
         const SPREAD = [
             { key: 'past', label: '과거' },
             { key: 'present', label: '현재' },
@@ -1523,21 +1523,6 @@
             },
         ];
 
-        const makeZodiacImage = (emoji, from, to) =>
-            `data:image/svg+xml;utf8,${encodeURIComponent(
-                `<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512'>
-                    <defs>
-                        <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-                            <stop offset='0%' stop-color='${from}'/>
-                            <stop offset='100%' stop-color='${to}'/>
-                        </linearGradient>
-                    </defs>
-                    <rect width='512' height='512' rx='72' fill='url(#g)'/>
-                    <circle cx='256' cy='256' r='185' fill='rgba(255,255,255,0.18)'/>
-                    <text x='50%' y='56%' dominant-baseline='middle' text-anchor='middle' font-size='210'>${emoji}</text>
-                </svg>`
-            )}`;
-
         const ZODIAC_DATA = [
             { key: 'rat', label: '쥐', emoji: '🐭', color: ['#0f172a', '#334155'], archetype: '상황판단형', focus: '기회 포착', line: '흐름이 바뀌기 직전의 미세한 신호를 잘 읽습니다.' },
             { key: 'ox', label: '소', emoji: '🐮', color: ['#3f3f46', '#52525b'], archetype: '축적지속형', focus: '지속 실행', line: '눈에 띄지 않아도 꾸준히 쌓아 결과를 만듭니다.' },
@@ -1551,7 +1536,433 @@
             { key: 'rooster', label: '닭', emoji: '🐔', color: ['#b91c1c', '#f43f5e'], archetype: '정밀관리형', focus: '디테일 통제', line: '흩어진 요소를 정돈해 완성도를 끌어올립니다.' },
             { key: 'dog', label: '개', emoji: '🐶', color: ['#1f2937', '#0ea5e9'], archetype: '신뢰수호형', focus: '책임과 의리', line: '관계에서 신뢰를 지키려는 책임감이 강합니다.' },
             { key: 'pig', label: '돼지', emoji: '🐷', color: ['#831843', '#fb7185'], archetype: '안정풍요형', focus: '생활 리듬', line: '성과와 삶의 균형을 함께 챙기는 감각이 좋습니다.' },
-        ].map((item) => ({ ...item, image: makeZodiacImage(item.emoji, item.color[0], item.color[1]) }));
+        ].map((item, idx) => ({ ...item, image: `card/12sin/${idx + 1}.jpg` }));
+
+        const ZODIAC_PROFILE_MAP = {
+            rat: { type: '신호 포착형', baseScores: { speed: 70, risk: 60, logic: 75, emotion: 55, social: 65, discipline: 60 }, investmentStyle: { primary: '이벤트 드리븐', secondary: '단기 트렌드 추종', avoid: '장기 방치 투자' }, recommendedJobs: ['리서치', '트레이더', '데이터 분석', '전략기획'], luckTrigger: ['새로운 정보 접할 때', '아침 시간 활용', '사람 많은 장소'], successStrategy: ['정보를 지표 2개로 확인', '작은 베팅 후 확대', '속도 유지하되 체크리스트 사용'], caution: ['과잉 반응 매매', '뉴스에 휘둘림', '조급한 확정'] },
+            ox: { type: '축적·내구형', baseScores: { speed: 40, risk: 35, logic: 65, emotion: 40, social: 55, discipline: 85 }, investmentStyle: { primary: '장기 분할 투자', secondary: '적립식 전략', avoid: '초단타 매매' }, recommendedJobs: ['운영관리', '재무', '공공기관', '엔지니어'], luckTrigger: ['꾸준한 루틴', '아침 정리 시간', '정돈된 환경'], successStrategy: ['분할 매수 유지', '리밸런싱 규칙화', '장기 계획 고정'], caution: ['변화 거부', '기회 과소평가', '지나친 보수성'] },
+            tiger: { type: '돌파·결단형', baseScores: { speed: 90, risk: 85, logic: 60, emotion: 65, social: 70, discipline: 50 }, investmentStyle: { primary: '공격형 트렌드 베팅', secondary: '신사업 투자', avoid: '현금 장기 보유' }, recommendedJobs: ['창업가', '영업', '사업개발', 'VC'], luckTrigger: ['무대/발표 자리', '위기 상황', '경쟁 환경'], successStrategy: ['조건 2개 충족 시 진입', '손절선 고정', '작은 실험 후 확장'], caution: ['과신', '감정 베팅', '풀 포지션 진입'] },
+            rabbit: { type: '관계·감응형', baseScores: { speed: 55, risk: 45, logic: 60, emotion: 70, social: 85, discipline: 60 }, investmentStyle: { primary: '커뮤니티 기반 투자', secondary: '중위험 분산', avoid: '고립형 단독 베팅' }, recommendedJobs: ['HR', '브랜딩', '상담', '마케팅'], luckTrigger: ['사람 만남', '소개/연결', '협업 제안'], successStrategy: ['결정 기준 1개 고정', '관계 자산 강화', '감정과 데이터 분리'], caution: ['우유부단', '눈치 과다', '타인 영향 과다'] },
+            dragon: { type: '비전·확장형', baseScores: { speed: 75, risk: 70, logic: 80, emotion: 55, social: 75, discipline: 60 }, investmentStyle: { primary: '테마/섹터 장기 베팅', secondary: '구조적 성장 투자', avoid: '단타 반복' }, recommendedJobs: ['전략기획', 'CEO', '컨설턴트', '정책기획'], luckTrigger: ['큰 그림 설계', '공개 발표', '기획 문서화'], successStrategy: ['주 1개 산출물', '장기 방향 유지', '7일 테스트 운영'], caution: ['실행 지연', '계획 과다', '현실 감각 저하'] },
+            snake: { type: '전략·통찰형', baseScores: { speed: 65, risk: 55, logic: 90, emotion: 45, social: 50, discipline: 75 }, investmentStyle: { primary: '확률 기반 매매', secondary: '리스크 관리형', avoid: '감정 추종 매매' }, recommendedJobs: ['전략가', '애널리스트', '연구직', '데이터과학'], luckTrigger: ['혼자 집중 시간', '심층 분석', '조용한 환경'], successStrategy: ['반대 근거 확인', '리스크 분산', '확률 계산 후 진입'], caution: ['확증편향', '고립 의사결정', '기회 과소평가'] },
+            horse: { type: '속도·기회형', baseScores: { speed: 95, risk: 80, logic: 60, emotion: 65, social: 75, discipline: 45 }, investmentStyle: { primary: '단기 트렌드', secondary: '모멘텀 투자', avoid: '장기 정적 보유' }, recommendedJobs: ['영업', 'BD', '마케팅', '스타트업'], luckTrigger: ['빠른 실행', '새 프로젝트', '이동/출장'], successStrategy: ['10분 멈춤 규칙', '소액 테스트', '품질 점검 1개 고정'], caution: ['충동성', '과속', '검증 부족'] },
+            goat: { type: '균형·회복형', baseScores: { speed: 50, risk: 40, logic: 60, emotion: 70, social: 65, discipline: 70 }, investmentStyle: { primary: '방어형 분산', secondary: '현금 비중 유지', avoid: '고위험 단기 베팅' }, recommendedJobs: ['관리직', '교육', '코치', '상담'], luckTrigger: ['규칙적 생활', '안정적 팀', '정리/정돈'], successStrategy: ['손실 한도 설정', '작은 실험 허용', '멘탈 관리'], caution: ['결정 지연', '기회 회피', '과도한 안전 추구'] },
+            monkey: { type: '유연·전환형', baseScores: { speed: 80, risk: 70, logic: 65, emotion: 60, social: 80, discipline: 50 }, investmentStyle: { primary: '다각화 실험', secondary: '신기술 투자', avoid: '단일 집중 몰빵' }, recommendedJobs: ['기획', '프로덕트', '콘텐츠', '혁신팀'], luckTrigger: ['새로운 아이디어', '협업', '변화 환경'], successStrategy: ['핵심 KPI 1개 고정', '메인 목표 유지', '실험은 분산'], caution: ['산만함', '일관성 부족', '새로움 집착'] },
+            rooster: { type: '정밀·관리형', baseScores: { speed: 55, risk: 45, logic: 75, emotion: 40, social: 55, discipline: 90 }, investmentStyle: { primary: '규칙 매매', secondary: '리스크 관리형', avoid: '감정 매매' }, recommendedJobs: ['품질관리', '감사', '재무관리', '프로세스 설계'], luckTrigger: ['정리', '리뷰', '계획 세우기'], successStrategy: ['70% 완성 시 실행', '주간 점검', '출시 후 개선'], caution: ['완벽주의', '출시 지연', '기회 상실'] },
+            dog: { type: '신뢰·수호형', baseScores: { speed: 60, risk: 50, logic: 65, emotion: 60, social: 80, discipline: 75 }, investmentStyle: { primary: '장기 신뢰 투자', secondary: '관계 기반 사업', avoid: '단기 투기' }, recommendedJobs: ['공공기관', '법무', '파트너십', 'CSR'], luckTrigger: ['약속 지킬 때', '팀워크', '신뢰 구축'], successStrategy: ['위임 1개 실행', '책임 분산', '장기 계획 유지'], caution: ['책임 과다', '번아웃', '자기 희생 과다'] },
+            pig: { type: '안정·풍요형', baseScores: { speed: 45, risk: 35, logic: 60, emotion: 65, social: 70, discipline: 70 }, investmentStyle: { primary: '장기 분산 투자', secondary: '현금 흐름 중심', avoid: '고위험 단기 매매' }, recommendedJobs: ['재무설계', '부동산', '운영관리', '서비스업'], luckTrigger: ['생활 안정', '정기적 수입', '편안한 환경'], successStrategy: ['작은 불편 도전', '정리 습관', '리듬 유지'], caution: ['안락함 집착', '결정 미루기', '성장 회피'] },
+        };
+
+        const SCORE_AXES = [
+            { key: 'speed', label: 'Speed', labelKr: '속도/결단' },
+            { key: 'risk', label: 'Risk', labelKr: '위험 감수' },
+            { key: 'logic', label: 'Logic', labelKr: '분석/프레임' },
+            { key: 'emotion', label: 'Emotion', labelKr: '감정 변동' },
+            { key: 'social', label: 'Social', labelKr: '관계/협업' },
+            { key: 'discipline', label: 'Discipline', labelKr: '규칙/지속성' },
+        ];
+        const clamp = (v, min = 0, max = 100) => Math.max(min, Math.min(max, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+
+        const computeUserScores = ({ psychVector, finalScores, tarotSpread }) => {
+            const pv = psychVector || { action: 0, emotion: 0, social: 0, stability: 0 };
+            const fs = finalScores || { drive: 0, relation: 0, decision: 0 };
+            const spread = Array.isArray(tarotSpread) ? tarotSpread : [];
+
+            let speed = 50 + pv.action * 4;
+            let risk = 50 + pv.action * 3 - pv.stability * 2;
+            let logic = 50 + pv.stability * 2;
+            let emotion = 50 + pv.emotion * 4;
+            let social = 50 + pv.social * 4;
+            let discipline = 50 + pv.stability * 4;
+
+            speed += fs.drive * 5;
+            risk += fs.drive * 4;
+            social += fs.relation * 5;
+            emotion += fs.relation * 2;
+            logic += fs.decision * 5;
+            discipline += fs.decision * 3;
+
+            const weightsByIndex = [0.6, 1.0, 0.8]; // past, present, future
+            const suitDelta = (suit, reversed) => {
+                const d = { speed: 0, risk: 0, logic: 0, emotion: 0, social: 0, discipline: 0 };
+
+                if (suit === 'wands') {
+                    d.speed += reversed ? 2 : 6;
+                    d.risk += reversed ? 1 : 6;
+                    d.emotion += reversed ? 4 : 0;
+                    d.discipline += reversed ? -2 : 0;
+                } else if (suit === 'cups') {
+                    d.social += reversed ? 2 : 6;
+                    d.emotion += reversed ? 8 : 6;
+                    d.discipline += reversed ? -4 : 0;
+                } else if (suit === 'swords') {
+                    d.logic += reversed ? 2 : 8;
+                    d.discipline += reversed ? 0 : 5;
+                    d.emotion += reversed ? 5 : -1;
+                    d.social += reversed ? -3 : 0;
+                } else if (suit === 'pentacles') {
+                    d.discipline += reversed ? -2 : 8;
+                    d.logic += reversed ? 1 : 5;
+                    d.risk += reversed ? 2 : -4;
+                    d.emotion += reversed ? 3 : -1;
+                }
+                return d;
+            };
+
+            spread.slice(0, 3).forEach((card, idx) => {
+                if (!card) return;
+                const w = weightsByIndex[idx] ?? 0.8;
+                const suit = card.arcana === 'minor' ? card.suit : null;
+
+                if (suit) {
+                    const d = suitDelta(suit, !!card.reversed);
+                    speed += d.speed * w;
+                    risk += d.risk * w;
+                    logic += d.logic * w;
+                    emotion += d.emotion * w;
+                    social += d.social * w;
+                    discipline += d.discipline * w;
+                } else if (card.reversed) {
+                    emotion += 2 * w;
+                    discipline -= 1 * w;
+                } else {
+                    logic += 1 * w;
+                }
+            });
+
+            return {
+                speed: clamp(speed),
+                risk: clamp(risk),
+                logic: clamp(logic),
+                emotion: clamp(emotion),
+                social: clamp(social),
+                discipline: clamp(discipline),
+            };
+        };
+
+        const personalizeScores = (baseScores, userScores, mix = 0.35) => {
+            const keys = ['speed', 'risk', 'logic', 'emotion', 'social', 'discipline'];
+            const out = {};
+            keys.forEach((k) => {
+                out[k] = clamp(lerp(baseScores?.[k] ?? 50, userScores?.[k] ?? 50, mix));
+            });
+            return out;
+        };
+
+        const inferInvestmentStyles = (scores) => {
+            const candidates = [
+                { label: '퀀트형(규칙/확률)', score: scores.logic * 0.55 + scores.discipline * 0.45 },
+                { label: '트렌드 추종형', score: scores.speed * 0.5 + scores.risk * 0.5 },
+                { label: '밸류/장기 적립형', score: scores.discipline * 0.65 + (100 - scores.risk) * 0.35 },
+                { label: '이벤트 드리븐', score: scores.speed * 0.45 + scores.logic * 0.55 },
+                { label: '방어/현금형', score: (100 - scores.risk) * 0.6 + scores.discipline * 0.4 },
+                { label: '커뮤니티/심리형', score: scores.social * 0.5 + scores.emotion * 0.5 },
+            ];
+            return candidates.sort((a, b) => b.score - a.score).slice(0, 2).map((c) => c.label);
+        };
+
+        const inferRoles = (scores, profile) => {
+            const roleByAxis = {
+                speed: ['BD', '영업', 'PM', '창업'],
+                risk: ['트레이더', '신사업', 'VC', '투자'],
+                logic: ['전략', '기획', '데이터', '리서치', 'PMO'],
+                emotion: ['콘텐츠', '브랜딩', '상담'],
+                social: ['HR', '파트너십', 'CS', '커뮤니티'],
+                discipline: ['운영', '품질', '재무', '프로세스'],
+            };
+            const topAxes = [...SCORE_AXES]
+                .sort((a, b) => (scores[b.key] || 0) - (scores[a.key] || 0))
+                .slice(0, 2)
+                .map((a) => a.key);
+            const combined = [...topAxes.flatMap((k) => roleByAxis[k] || []), ...(profile?.recommendedJobs || [])];
+            return [...new Set(combined)].slice(0, 3);
+        };
+
+        const inferKeywords = (scores) => {
+            const keywordMap = {
+                speed: '조건부진입',
+                risk: '리스크테이킹',
+                logic: '확률프레임',
+                emotion: '감정분리',
+                social: '관계레버리지',
+                discipline: '리스크관리',
+            };
+            return [...SCORE_AXES]
+                .sort((a, b) => (scores[b.key] || 0) - (scores[a.key] || 0))
+                .slice(0, 3)
+                .map((axis) => `#${keywordMap[axis.key]}`);
+        };
+
+        const AXIS = [
+            { key: 'speed', label: '속도/결단' },
+            { key: 'risk', label: '리스크' },
+            { key: 'logic', label: '분석' },
+            { key: 'emotion', label: '감정민감' },
+            { key: 'social', label: '관계레버' },
+            { key: 'discipline', label: '규율/루틴' },
+        ];
+
+        const polarToXY = (cx, cy, r, angleRad) => ({ x: cx + r * Math.cos(angleRad), y: cy + r * Math.sin(angleRad) });
+
+        const buildPolygonPoints = (scores, size = 260, padding = 26) => {
+            const cx = size / 2;
+            const cy = size / 2;
+            const maxR = size / 2 - padding;
+            const n = AXIS.length;
+            const start = -Math.PI / 2;
+            const pts = AXIS.map((a, i) => {
+                const v = (scores?.[a.key] ?? 50) / 100;
+                const angle = start + (2 * Math.PI * i) / n;
+                const p = polarToXY(cx, cy, maxR * v, angle);
+                return `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
+            });
+            return pts.join(' ');
+        };
+
+        const buildAxisLines = (size = 260, padding = 26) => {
+            const cx = size / 2;
+            const cy = size / 2;
+            const maxR = size / 2 - padding;
+            const n = AXIS.length;
+            const start = -Math.PI / 2;
+            return AXIS.map((a, i) => {
+                const angle = start + (2 * Math.PI * i) / n;
+                const p = polarToXY(cx, cy, maxR, angle);
+                return { key: a.key, label: a.label, x: p.x, y: p.y, angle };
+            });
+        };
+
+        const buildLabelPos = (x, y, cx, cy) => {
+            const dx = x - cx;
+            const dy = y - cy;
+            const k = 0.1;
+            return { lx: x + dx * k, ly: y + dy * k };
+        };
+
+        const RadarChart = ({ baseScores, personalScores, title = '성향 레이더', size = 280 }) => {
+            const padding = 30;
+            const cx = size / 2;
+            const cy = size / 2;
+            const basePts = buildPolygonPoints(baseScores, size, padding);
+            const personalPts = buildPolygonPoints(personalScores, size, padding);
+            const axes = buildAxisLines(size, padding);
+            const rings = [0.25, 0.5, 0.75, 1.0].map((t) => {
+                const ringScores = AXIS.reduce((acc, a) => ((acc[a.key] = t * 100), acc), {});
+                return buildPolygonPoints(ringScores, size, padding);
+            });
+
+            return (
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-surface-dark p-5 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="text-sm font-extrabold text-slate-900 dark:text-white">{title}</div>
+                        <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">기준(옅게) vs 개인화(진하게)</div>
+                    </div>
+                    <div className="w-full flex justify-center">
+                        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+                            {rings.map((pts, idx) => (
+                                <polygon key={idx} points={pts} fill="none" stroke="rgba(148,163,184,0.35)" strokeWidth="1" />
+                            ))}
+                            {axes.map((a) => (
+                                <line key={a.key} x1={cx} y1={cy} x2={a.x} y2={a.y} stroke="rgba(148,163,184,0.30)" strokeWidth="1" />
+                            ))}
+                            <polygon points={basePts} fill="rgba(127,19,236,0.12)" stroke="rgba(127,19,236,0.35)" strokeWidth="2" />
+                            <polygon points={personalPts} fill="rgba(127,19,236,0.28)" stroke="rgba(127,19,236,0.85)" strokeWidth="2.5" />
+                            <circle cx={cx} cy={cy} r="3" fill="rgba(127,19,236,0.9)" />
+                            {axes.map((a) => {
+                                const { lx, ly } = buildLabelPos(a.x, a.y, cx, cy);
+                                const anchor = Math.abs(lx - cx) < 5 ? 'middle' : lx > cx ? 'start' : 'end';
+                                return (
+                                    <text key={a.key} x={lx} y={ly} fontSize="11" textAnchor={anchor} dominantBaseline="middle" fill="rgba(100,116,139,0.95)">
+                                        {a.label}
+                                    </text>
+                                );
+                            })}
+                        </svg>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {AXIS.map((a) => {
+                            const v = Math.round(personalScores?.[a.key] ?? 50);
+                            const badge = v >= 75 ? 'bg-primary/10 text-primary border-primary/20' : v >= 55 ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-50 text-slate-500 border-slate-200';
+                            return (
+                                <span key={a.key} className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border ${badge} dark:bg-white/5 dark:text-slate-200 dark:border-white/10`}>
+                                    {a.label} {v}
+                                </span>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const classifyInvestmentLabel = (s) => {
+            const speed = s.speed;
+            const risk = s.risk;
+            const logic = s.logic;
+            const emotion = s.emotion;
+            const discipline = s.discipline;
+            const social = s.social;
+            if (discipline >= 75 && logic >= 75 && risk <= 55) {
+                return { label: '룰기반 리스크관리형', tip: "전쟁·정책·AI 급변 구간에서는 '규칙'이 수익을 지킵니다. 진입/손절/현금비중을 자동화하세요." };
+            }
+            if (speed >= 75 && risk >= 70) {
+                return { label: '이벤트·모멘텀형', tip: "이슈의 속도가 알파입니다. 다만 포지션을 '분할'하고 손절선을 먼저 고정하세요." };
+            }
+            if (social >= 75 && emotion >= 60) {
+                return { label: '커뮤니티·감응형', tip: '정보·관계 레버리지가 장점입니다. 단, 감정 매매 방지를 위해 매매 전 체크리스트 3개를 고정하세요.' };
+            }
+            if (logic >= 75 && emotion <= 50) {
+                return { label: '확률·분석형', tip: "AI 시대에 강한 타입입니다. 시나리오/확률/손익비 기반으로 '반대근거'를 의무화하세요." };
+            }
+            if (risk <= 45 && discipline >= 65) {
+                return { label: '방어·현금흐름형', tip: '불확실성이 큰 시기엔 생존력이 강합니다. 리밸런싱 주기를 정해 기회도 놓치지 마세요.' };
+            }
+            return { label: '균형·혼합형', tip: "상황에 따라 강점이 바뀝니다. 한 전략으로 고정하지 말고 '시장 국면'별 플레이북을 나누세요." };
+        };
+
+        const ScoreBars = ({ scores, title = '점수 보드' }) => {
+            const inv = classifyInvestmentLabel(scores);
+            const barClass = (v) => (v >= 75 ? 'bg-primary' : v >= 55 ? 'bg-primary/60' : 'bg-slate-300 dark:bg-slate-700');
+
+            return (
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-surface-dark p-5 shadow-sm">
+                    <div className="flex items-start justify-between mb-4">
+                        <div>
+                            <div className="text-sm font-extrabold text-slate-900 dark:text-white">{title}</div>
+                            <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">개인화 점수(0~100) 기준</div>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">{inv.label}</span>
+                    </div>
+                    <div className="space-y-3">
+                        {AXIS.map((a) => {
+                            const v = Math.round(scores?.[a.key] ?? 50);
+                            return (
+                                <div key={a.key}>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">{a.label}</div>
+                                        <div className="text-xs font-bold text-slate-600 dark:text-slate-300">{v}</div>
+                                    </div>
+                                    <div className="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                                        <div className={`h-full ${barClass(v)} rounded-full`} style={{ width: `${v}%` }} />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="mt-4 rounded-xl border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-black/10 p-3">
+                        <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1">AI/분쟁 변동성 대응 팁</div>
+                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200 leading-relaxed">{inv.tip}</div>
+                    </div>
+                </div>
+            );
+        };
+
+        const band = (v) => {
+            if (v <= 49) return 'low';
+            if (v <= 74) return 'mid';
+            return 'high';
+        };
+
+        const AXIS_TEXT = {
+            speed: {
+                low: { strength: '속도보다 검증을 우선하는 신중형입니다.', caution: '결정 지연으로 타이밍을 놓치지 않게 마감 시점을 고정하세요.', action: '오늘 할 결정 1개를 15분 안에 확정하세요.' },
+                mid: { strength: '필요할 때 속도를 내는 균형형입니다.', caution: '상황별 속도 편차가 커지지 않도록 기준을 유지하세요.', action: '진행 기준 2개를 먼저 정하고 착수하세요.' },
+                high: { strength: '기회 포착과 결단이 빠른 실행형입니다.', caution: '과속 진입을 막기 위해 진입 전 확인 루틴이 필요합니다.', action: '실행 전 체크리스트 3개를 확인하고 출발하세요.' },
+            },
+            risk: {
+                low: { strength: '손실 회피와 안정 관리가 뛰어납니다.', caution: '기회 구간에서도 과도한 방어로 수익을 놓칠 수 있습니다.', action: '리스크 허용 구간을 1단계만 상향해 테스트하세요.' },
+                mid: { strength: '위험과 보상의 균형 감각이 좋습니다.', caution: '시장 급변 시 기준이 흔들리지 않게 규칙을 유지하세요.', action: '포지션 크기 규칙을 숫자로 고정하세요.' },
+                high: { strength: '고위험 구간에서도 기회를 잡는 공격형입니다.', caution: '한 번의 실수 타격이 커질 수 있어 손절선이 필수입니다.', action: '진입과 동시에 손절/익절 가격을 같이 기록하세요.' },
+            },
+            logic: {
+                low: { strength: '직관과 흐름 감각이 빠릅니다.', caution: '근거 없는 확신으로 이어지지 않게 최소 근거를 확보하세요.', action: '결정 전에 반대 근거 1개를 반드시 적으세요.' },
+                mid: { strength: '직관과 분석을 함께 쓰는 실전형입니다.', caution: '핵심 지표가 너무 많아지면 판단 속도가 떨어집니다.', action: '의사결정 지표를 2개로 제한하세요.' },
+                high: { strength: '구조화된 분석과 확률 판단이 강점입니다.', caution: '완벽한 근거를 기다리며 진입이 늦어질 수 있습니다.', action: '70% 근거면 실행하는 룰을 적용하세요.' },
+            },
+            emotion: {
+                low: { strength: '감정 기복이 작아 안정적입니다.', caution: '감정 신호를 무시하면 관계 피드백을 놓칠 수 있습니다.', action: '중요 결정 전 감정 상태를 한 줄로 기록하세요.' },
+                mid: { strength: '감정과 이성을 함께 활용하는 균형형입니다.', caution: '피로 누적 시 감정 반응이 커질 수 있습니다.', action: '고강도 의사결정 사이 10분 회복 시간을 넣으세요.' },
+                high: { strength: '상황/사람의 신호를 민감하게 포착합니다.', caution: '감정 동조로 판단 기준이 흐려질 수 있습니다.', action: '매매/결정 직전 체크리스트로 감정 분리를 실행하세요.' },
+            },
+            social: {
+                low: { strength: '독립적으로 깊이 있게 몰입할 수 있습니다.', caution: '고립 판단으로 시야가 좁아질 수 있습니다.', action: '중요 결정 1건은 제3자 피드백을 받으세요.' },
+                mid: { strength: '협업과 단독 실행을 유연하게 전환합니다.', caution: '역할 경계가 흐려지면 책임이 분산될 수 있습니다.', action: '협업 시 역할/마감/책임자를 먼저 확정하세요.' },
+                high: { strength: '관계 네트워크를 성과로 연결하는 힘이 큽니다.', caution: '타인 신호에 과도 반응하면 본인 기준이 흔들릴 수 있습니다.', action: '관계 의견과 본인 기준을 분리 기록하세요.' },
+            },
+            discipline: {
+                low: { strength: '상황 변화에 유연하게 대응합니다.', caution: '일관성 부족으로 성과 누적이 느릴 수 있습니다.', action: '매일 반복할 고정 루틴 1개를 설정하세요.' },
+                mid: { strength: '지속성과 유연성의 균형이 좋습니다.', caution: '환경이 바쁘면 루틴이 먼저 깨질 수 있습니다.', action: '주간 점검 시간을 캘린더에 선등록하세요.' },
+                high: { strength: '규칙 기반의 누적 성과를 만드는 타입입니다.', caution: '완벽주의로 시작이 늦어지지 않게 주의하세요.', action: '완성도 70%에서 1차 공개 후 개선하세요.' },
+            },
+        };
+
+        const generateAxisNarratives = (scores) => {
+            return SCORE_AXES.map((axis) => {
+                const value = Math.round(scores?.[axis.key] ?? 50);
+                const zone = band(value);
+                const text = AXIS_TEXT[axis.key][zone];
+                return {
+                    key: axis.key,
+                    label: axis.labelKr,
+                    value,
+                    strength: text.strength,
+                    caution: text.caution,
+                    action: text.action,
+                };
+            });
+        };
+
+        const ProfileSummaryCard = ({ profile }) => {
+            if (!profile) return null;
+            return (
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-surface-dark p-5 shadow-sm">
+                    <div className="flex items-start justify-between mb-4">
+                        <div>
+                            <div className="text-sm font-extrabold text-slate-900 dark:text-white">핵심 가이드</div>
+                            <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">성향 · 투자 · 직업 · 행운 · 성공 · 주의</div>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">{profile.type}</span>
+                    </div>
+                    <div className="space-y-4">
+                        <div>
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">투자 스타일</div>
+                            <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                                {profile.investmentStyle?.primary} <span className="text-slate-400">/</span> {profile.investmentStyle?.secondary}
+                            </div>
+                            <div className="text-xs text-rose-500 font-semibold mt-1">피할 것: {profile.investmentStyle?.avoid}</div>
+                        </div>
+                        <div>
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">추천 직업</div>
+                            <div className="flex flex-wrap gap-2">
+                                {(profile.recommendedJobs || []).map((x) => (
+                                    <span key={x} className="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-slate-50 text-slate-700 border-slate-200 dark:bg-white/5 dark:text-slate-200 dark:border-white/10">
+                                        {x}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">행운 트리거</div>
+                            <ul className="text-sm text-slate-700 dark:text-slate-200 list-disc pl-5 leading-relaxed">
+                                {(profile.luckTrigger || []).map((x, i) => <li key={i}>{x}</li>)}
+                            </ul>
+                        </div>
+                        <div>
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">성공 전략</div>
+                            <ul className="text-sm text-slate-700 dark:text-slate-200 list-disc pl-5 leading-relaxed">
+                                {(profile.successStrategy || []).map((x, i) => <li key={i}>{x}</li>)}
+                            </ul>
+                        </div>
+                        <div>
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">조심할 것</div>
+                            <ul className="text-sm text-slate-700 dark:text-slate-200 list-disc pl-5 leading-relaxed">
+                                {(profile.caution || []).map((x, i) => <li key={i}>{x}</li>)}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
 
         const normalizeMod = (n, m) => ((n % m) + m) % m;
 
@@ -1701,7 +2112,7 @@
 
                     <main className="flex-1 px-5 pt-4 pb-28 overflow-y-auto">
                         <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 overflow-x-auto no-scrollbar">
-                            <div className="flex gap-1.5 min-w-max">
+                            <div className="grid grid-rows-2 grid-flow-col auto-cols-[52px] gap-1.5 min-w-max">
                                 {Array.from({ length: 18 }, (_, idx) => (
                                     <div key={idx} className="w-[52px] h-[78px] rounded-lg overflow-hidden border border-slate-300/80 dark:border-slate-600/80 shadow-sm">
                                         <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${TAROT_BACK_IMAGE}')` }}></div>
@@ -1812,30 +2223,17 @@
             const qShift = normalizeMod(finalScores.drive * 2 + finalScores.relation + finalScores.decision, 12);
             const zodiacIndex = normalizeMod(baseIndex + tarotIndexShift + qShift, 12);
             const zodiac = ZODIAC_DATA[zodiacIndex];
+            const profile = ZODIAC_PROFILE_MAP[zodiac.key];
             const tarotFocusCard = tarotSpread[1] || tarotSpread[0];
+            const userScores = computeUserScores({
+                psychVector: birthData?.psychVector,
+                finalScores,
+                tarotSpread,
+            });
+            const personalizedScores = personalizeScores(profile.baseScores, userScores, 0.35);
 
-            const mbtiTone =
-                finalScores.decision >= 2
-                    ? 'MBTI의 J 성향처럼 기준을 세우고 정리할수록 안정됩니다.'
-                    : finalScores.drive >= 2
-                    ? 'MBTI의 P 성향처럼 열린 선택지 속에서 기민하게 움직일 때 강점이 살아납니다.'
-                    : '상황에 따라 J/P를 유연하게 오가는 균형형 기질이 보입니다.';
-
-            const relationTone =
-                finalScores.relation >= 2
-                    ? '혈액형 심리에서 A/B형의 대인 감수성을 섞은 듯, 분위기와 감정 결을 섬세하게 읽습니다.'
-                    : finalScores.relation <= -1
-                    ? '혈액형 심리의 O형처럼 목표 중심으로 관계를 단순화할 때 성과가 잘 납니다.'
-                    : '관계와 목표 사이의 균형을 비교적 안정적으로 유지하는 편입니다.';
-
-            const tarotSummary = readMeaning(tarotFocusCard)?.summary || '선택한 카드에서 핵심 흐름이 확인되었습니다.';
-            const tarotKeywords = readKeywords(tarotFocusCard).slice(0, 4).join(' · ');
-            const birthTimeText = birthData.unknownTime ? '시간 모름' : `${birthData.hour}:${birthData.minute}`;
-
-            const actionTips = [
-                `이번 주에는 '${zodiac.focus}' 중심으로 일정 1개를 먼저 완료하세요.`,
-                tarotFocusCard.reversed ? '결정을 미루기보다 검증 단계를 짧게 두고 실행으로 넘어가세요.' : '현재 흐름은 우호적이니 작은 성공 경험을 빠르게 누적하세요.',
-            ];
+            const topKeywords = inferKeywords(personalizedScores);
+            const axisNarratives = generateAxisNarratives(personalizedScores);
 
             return (
                 <AppScreen>
@@ -1850,10 +2248,15 @@
                     </header>
 
                     <main className="flex-1 pb-28 px-5 overflow-y-auto">
-                        <div className="mt-5 text-center">
-                            <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider bg-primary/10 text-primary border border-primary/20">결과 동물: {zodiac.label}</div>
-                            <h2 className="mt-3 text-3xl font-black text-slate-900 dark:text-white">{zodiac.label}상 ({zodiac.archetype})</h2>
-                            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{zodiac.line}</p>
+                        <div className="mt-5 rounded-3xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
+                            <div className="text-xs font-bold text-primary/80 tracking-wider">당신의 동물</div>
+                            <h2 className="mt-1 text-3xl font-black text-slate-900 dark:text-white">{zodiac.emoji} {zodiac.label}상</h2>
+                            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">한 줄 정체성: "{profile.type} - {zodiac.archetype} 실전형"</p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                                {topKeywords.map((k) => (
+                                    <span key={k} className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary/10 text-primary border border-primary/20">{k}</span>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="mt-5 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg">
@@ -1861,49 +2264,47 @@
                         </div>
 
                         <div className="mt-6 grid grid-cols-1 gap-4">
-                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
-                                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">타로에서 읽힌 현재 흐름</div>
-                                <div className="text-sm leading-7 text-slate-700 dark:text-slate-200">{tarotSummary}</div>
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                    {tarotKeywords.split(' · ').filter(Boolean).map((k) => (
-                                        <span key={k} className="px-2 py-1 rounded-full text-[11px] font-semibold bg-primary/10 text-primary border border-primary/20">#{k}</span>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
-                                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">사주 리듬 요약</div>
-                                <div className="text-sm leading-7 text-slate-700 dark:text-slate-200">
-                                    출생 정보 {birthData.date} ({birthData.calendarType === 'lunar' ? '음력' : '양력'}), {birthTimeText}를 기준으로 보면, 올해는 '{zodiac.focus}'을 전면에 둘 때 흐름이 열리는 패턴입니다.
-                                </div>
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
-                                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">심리 패턴 해석</div>
-                                <div className="text-sm leading-7 text-slate-700 dark:text-slate-200">{mbtiTone}</div>
-                                <div className="mt-2 text-sm leading-7 text-slate-700 dark:text-slate-200">{relationTone}</div>
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
-                                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">마지막 3문항 반영 포인트</div>
-                                <ul className="text-sm leading-7 text-slate-700 dark:text-slate-200 list-disc pl-5">
-                                    <li>추진 점수: {finalScores.drive}</li>
-                                    <li>관계 점수: {finalScores.relation}</li>
-                                    <li>판단 점수: {finalScores.decision}</li>
-                                </ul>
-                                {finalAnswers.length > 0 && (
-                                    <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">선택 요약: {finalAnswers.map((a) => a.option).join(' · ')}</div>
-                                )}
-                            </div>
-
-                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
-                                <div className="text-sm font-bold text-slate-900 dark:text-white mb-3">오늘의 실행 제안</div>
-                                <div className="grid gap-2">
-                                    {actionTips.map((tip, idx) => (
-                                        <div key={idx} className="text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white/70 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/80 dark:border-slate-700/80">
-                                            {tip}
+                            <RadarChart
+                                title="성향 레이더(개인화)"
+                                baseScores={profile.baseScores}
+                                personalScores={personalizedScores}
+                                size={290}
+                            />
+                            <ScoreBars
+                                title="점수 보드 + 투자 라벨"
+                                scores={personalizedScores}
+                            />
+                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-surface-dark p-5 shadow-sm">
+                                <div className="text-sm font-extrabold text-slate-900 dark:text-white">자동 해석 리포트 (점수 구간 기반)</div>
+                                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">0~49: 안정/보완, 50~74: 균형, 75~100: 강점 극대화 구간</div>
+                                <div className="mt-4 space-y-3">
+                                    {axisNarratives.map((n) => (
+                                        <div key={n.key} className="rounded-xl border border-slate-200/80 dark:border-white/10 p-3 bg-white/60 dark:bg-black/10">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <div className="text-xs font-bold text-slate-700 dark:text-slate-200">{n.label}</div>
+                                                <div className="text-[11px] font-extrabold text-primary">{n.value}</div>
+                                            </div>
+                                            <p className="text-xs text-slate-700 dark:text-slate-200">강점: {n.strength}</p>
+                                            <p className="mt-1 text-xs text-rose-600 dark:text-rose-300">주의: {n.caution}</p>
+                                            <p className="mt-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">오늘의 1문장 액션: {n.action}</p>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                            <ProfileSummaryCard profile={profile} />
+
+                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
+                                <div className="text-sm font-bold text-slate-900 dark:text-white mb-3">실행 버튼</div>
+                                <div className="grid gap-2">
+                                    <button onClick={() => alert('전략 카드를 저장했습니다.')} className="h-11 rounded-xl bg-primary text-white font-bold">
+                                        내 전략 카드 저장
+                                    </button>
+                                    <button onClick={() => alert('3개월 루틴 가이드를 생성했습니다.')} className="h-11 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold">
+                                        3개월 루틴 받기
+                                    </button>
+                                    <button onClick={() => alert(personalizedScores.risk >= 60 ? '방어 모드 기준으로 재해석했습니다.' : '공격 모드 기준으로 재해석했습니다.')} className="h-11 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-slate-800 dark:text-slate-100">
+                                        투자 모드(공격/방어)로 재해석
+                                    </button>
                                 </div>
                             </div>
                         </div>
