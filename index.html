@@ -94,6 +94,7 @@
             font-family: 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif;
             -webkit-font-smoothing: antialiased;
             min-height: 100dvh;
+            background-color: #f7f6f8;
         }
         .text-gradient {
             background: linear-gradient(135deg, #7f13ec 0%, #b06bf7 100%);
@@ -175,8 +176,11 @@
     </style>
   </head>
 <body>
-    <div id="root" style="min-height:100vh; display:flex; align-items:center; justify-content:center; color:#111; font-family: 'Plus Jakarta Sans','Noto Sans KR',sans-serif;">
-        Loading...
+    <div id="root" style="min-height:100vh; display:flex; align-items:center; justify-content:center; color:#111; font-family: 'Plus Jakarta Sans','Noto Sans KR',sans-serif; background:#f7f6f8;">
+        <div style="text-align:center; max-width:420px; padding:24px;">
+            <div style="font-weight:800; font-size:20px; margin-bottom:8px;">Life Position</div>
+            <div style="color:#555; font-size:14px;">화면을 준비하고 있어요...</div>
+        </div>
     </div>
     <noscript>
         <div style="padding:16px; color:#111; font-family: 'Plus Jakarta Sans','Noto Sans KR',sans-serif;">
@@ -241,10 +245,10 @@
                     <footer className="absolute bottom-0 left-0 w-full p-6 bg-gradient-to-t from-background-light via-background-light/90 to-transparent dark:from-background-dark dark:via-background-dark/90 pb-8 pt-12 z-20">
                         <div className="max-w-[430px] mx-auto flex flex-col gap-4">
                             <button 
-                                onClick={() => navigate('/analysis')}
+                                onClick={() => navigate('/tarot')}
                                 className="w-full h-14 bg-primary hover:bg-primary-light active:scale-[0.98] transition-all duration-200 text-white rounded-full font-bold text-lg shadow-lg shadow-primary/30 flex items-center justify-center gap-2 group"
                             >
-                                <span>질문(설문) 시작하기</span>
+                                <span>타로부터 시작하기</span>
                                 <span className="material-symbols-outlined transition-transform group-hover:translate-x-1" style={{ fontSize: '20px' }}>arrow_forward</span>
                             </button>
                             <button className="w-full py-2 text-sm font-medium text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary-light transition-colors flex items-center justify-center gap-1">
@@ -263,6 +267,11 @@
             const location = useLocation();
             const psychVector = location.state?.psychVector || null;
             const answers = location.state?.answers || null;
+            const tarotSpread = Array.isArray(location.state?.tarotSpread)
+                ? location.state.tarotSpread
+                : location.state?.tarotPick
+                ? [location.state.tarotPick]
+                : [];
             const [calendarType, setCalendarType] = useState('solar');
             const [birthDate, setBirthDate] = useState('1997-09-01');
             const [hour, setHour] = useState('10');
@@ -440,7 +449,7 @@
                         </main>
                         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background-light via-background-light to-transparent dark:from-background-dark dark:via-background-dark pt-12">
                             <button 
-                                onClick={() => navigate('/tarot', {
+                                onClick={() => navigate('/final-questions', {
                                     state: {
                                         birthData: {
                                             calendarType,
@@ -451,11 +460,12 @@
                                             psychVector,
                                             answers,
                                         },
+                                        tarotSpread,
                                     },
                                 })}
                                 className="w-full h-14 bg-primary hover:bg-violet-700 text-white text-lg font-bold rounded-2xl shadow-lg shadow-primary/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
                             >
-                                <span>사주 분석 완료</span>
+                                <span>질문 3개로 마무리하기</span>
                                 <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform text-[24px]">arrow_forward</span>
                             </button>
                             <p className="mt-3 text-[11px] text-center text-slate-400 dark:text-slate-500 font-medium">
@@ -1141,694 +1151,784 @@
             );
         };
 
-        const TarotScreen = ({ pickedTarots, setPickedTarots }) => {
+        // 3-card spread data (78 expandable)
+        const MAJOR_ARCANA = [
+            { n: 0, key: 'fool', kr: '바보', en: 'The Fool', ku: ['시작', '모험', '자유'], krv: ['무모', '방황', '지연'], su: '새로운 출발을 가볍게 시작하면 길이 열립니다.', sr: '무모함이나 방향 상실로 흐름이 흔들릴 수 있습니다.' },
+            { n: 1, key: 'magician', kr: '마법사', en: 'The Magician', ku: ['의지', '기술', '실행'], krv: ['속임', '분산', '미숙'], su: '지금 가진 도구로 충분히 해낼 수 있습니다.', sr: '자원은 있지만 연결이 흐트러져 성과가 새기 쉽습니다.' },
+            { n: 2, key: 'high_priestess', kr: '여사제', en: 'The High Priestess', ku: ['직관', '내면', '통찰'], krv: ['혼란', '불신', '과민'], su: '겉보다 안쪽 신호를 읽을 때 정답이 보입니다.', sr: '직감이 흐려져 오해가 생길 수 있습니다.' },
+            { n: 3, key: 'empress', kr: '여황제', en: 'The Empress', ku: ['풍요', '창조', '보살핌'], krv: ['과보호', '게으름', '과소비'], su: '풍요를 키우는 흐름입니다.', sr: '과도함이 부담이 될 수 있습니다.' },
+            { n: 4, key: 'emperor', kr: '황제', en: 'The Emperor', ku: ['질서', '통제', '책임'], krv: ['경직', '독단', '불안정'], su: '구조를 세우면 안정됩니다.', sr: '경직이 갈등을 부를 수 있습니다.' },
+            { n: 5, key: 'hierophant', kr: '교황', en: 'The Hierophant', ku: ['전통', '학습', '가이드'], krv: ['고집', '형식', '반항'], su: '검증된 방식이 이득입니다.', sr: '규칙이 답답해질 수 있습니다.' },
+            { n: 6, key: 'lovers', kr: '연인', en: 'The Lovers', ku: ['선택', '관계', '조화'], krv: ['갈등', '우유부단', '불일치'], su: '정렬된 선택이 관계를 살립니다.', sr: '갈림길에서 흔들릴 수 있습니다.' },
+            { n: 7, key: 'chariot', kr: '전차', en: 'The Chariot', ku: ['승리', '추진', '집중'], krv: ['과속', '분열', '통제 상실'], su: '집중해서 밀면 성과가 납니다.', sr: '힘은 있는데 방향이 흔들립니다.' },
+            { n: 8, key: 'strength', kr: '힘', en: 'Strength', ku: ['인내', '용기', '절제'], krv: ['불안', '충동', '지침'], su: '부드러운 힘이 통합니다.', sr: '지치면 충동이 커질 수 있습니다.' },
+            { n: 9, key: 'hermit', kr: '은둔자', en: 'The Hermit', ku: ['탐색', '고독', '통찰'], krv: ['고립', '회피', '정체'], su: '혼자 정리하면 답이 보입니다.', sr: '고립이 길어지면 정체됩니다.' },
+            { n: 10, key: 'wheel', kr: '운명의 수레바퀴', en: 'Wheel of Fortune', ku: ['변화', '기회', '전환'], krv: ['불운', '지연', '역행'], su: '흐름이 바뀌는 구간입니다.', sr: '지연이 생길 수 있습니다.' },
+            { n: 11, key: 'justice', kr: '정의', en: 'Justice', ku: ['균형', '판단', '정리'], krv: ['불공정', '편향', '왜곡'], su: '정리와 판단의 타이밍입니다.', sr: '편향이 문제를 키울 수 있습니다.' },
+            { n: 12, key: 'hanged', kr: '매달린 사람', en: 'The Hanged Man', ku: ['유예', '전환', '내려놓기'], krv: ['정체', '고집', '희생 과다'], su: '잠깐 멈추면 길이 보입니다.', sr: '고집이 정체를 만들 수 있습니다.' },
+            { n: 13, key: 'death', kr: '죽음', en: 'Death', ku: ['종결', '재생', '리셋'], krv: ['미련', '거부', '지연'], su: '끝내야 새로 시작됩니다.', sr: '변화를 미루면 더 힘들어집니다.' },
+            { n: 14, key: 'temperance', kr: '절제', en: 'Temperance', ku: ['조화', '치유', '균형'], krv: ['극단', '불균형', '과잉'], su: '리듬을 맞추면 회복됩니다.', sr: '극단이 문제를 만들 수 있습니다.' },
+            { n: 15, key: 'devil', kr: '악마', en: 'The Devil', ku: ['집착', '유혹', '고착'], krv: ['해방', '끊기', '탈출'], su: '집착이 에너지를 묶을 수 있습니다.', sr: '끊어내면 가벼워집니다.' },
+            { n: 16, key: 'tower', kr: '탑', en: 'The Tower', ku: ['충격', '붕괴', '각성'], krv: ['회피', '지연', '약한 붕괴'], su: '무너져야 다시 세울 수 있습니다.', sr: '문제를 미루면 더 커질 수 있습니다.' },
+            { n: 17, key: 'star', kr: '별', en: 'The Star', ku: ['희망', '치유', '재정렬'], krv: ['불신', '낙담', '흐림'], su: '리셋하고 다시 가면 이득입니다.', sr: '기대가 꺾이면 흐름이 흐려질 수 있습니다.' },
+            { n: 18, key: 'moon', kr: '달', en: 'The Moon', ku: ['무의식', '직관', '흔들림'], krv: ['명료', '해소', '정리'], su: '감정의 파도를 조절해야 합니다.', sr: '불확실성이 걷히고 정리됩니다.' },
+            { n: 19, key: 'sun', kr: '태양', en: 'The Sun', ku: ['성공', '가시성', '확장'], krv: ['과신', '지연', '소진'], su: '지금은 공개와 확장이 유리합니다.', sr: '과열되면 소진이 올 수 있습니다.' },
+            { n: 20, key: 'judgement', kr: '심판', en: 'Judgement', ku: ['각성', '결정', '부활'], krv: ['미결', '후회', '지연'], su: '결단의 타이밍입니다.', sr: '정리가 안 되면 후회가 남습니다.' },
+            { n: 21, key: 'world', kr: '세계', en: 'The World', ku: ['완성', '성취', '마무리'], krv: ['미완', '보류', '지연'], su: '마무리하면 다음 단계가 열립니다.', sr: '마무리가 늦어질 수 있습니다.' },
+        ].map((card) => ({
+            id: `maj_${String(card.n).padStart(2, '0')}_${card.key}`,
+            arcana: 'major',
+            number: card.n,
+            suit: null,
+            rank: null,
+            label_kr: card.kr,
+            label_en: card.en,
+            keywords_upright: card.ku,
+            keywords_reversed: card.krv,
+            meaning: {
+                upright: {
+                    summary: card.su,
+                    advice: ['작게 시작해도 괜찮아요', '우선순위 1개에 집중하세요'],
+                    caution: ['성급한 결정은 피하세요'],
+                },
+                reversed: {
+                    summary: card.sr,
+                    advice: ['확인 후 한 걸음 진행하세요', '속도를 한 번 낮춰보세요'],
+                    caution: ['충동적인 선택은 주의하세요'],
+                },
+            },
+            image_front: `card/mager/${card.n}.jpg`,
+            image_back: null,
+        }));
+
+        const MINOR_SUITS = [
+            { key: 'wands', kr: '완드', en: 'Wands', upright: ['의지', '추진'], reversed: ['과속', '분산'] },
+            { key: 'cups', kr: '컵', en: 'Cups', upright: ['감정', '관계'], reversed: ['기복', '과민'] },
+            { key: 'swords', kr: '소드', en: 'Swords', upright: ['판단', '명료'], reversed: ['갈등', '예민'] },
+            { key: 'pentacles', kr: '펜타클', en: 'Pentacles', upright: ['현실', '축적'], reversed: ['지연', '고착'] },
+        ];
+
+        const MINOR_RANKS = [
+            { value: 1, kr: '에이스', en: 'Ace' },
+            { value: 2, kr: '2', en: 'Two' },
+            { value: 3, kr: '3', en: 'Three' },
+            { value: 4, kr: '4', en: 'Four' },
+            { value: 5, kr: '5', en: 'Five' },
+            { value: 6, kr: '6', en: 'Six' },
+            { value: 7, kr: '7', en: 'Seven' },
+            { value: 8, kr: '8', en: 'Eight' },
+            { value: 9, kr: '9', en: 'Nine' },
+            { value: 10, kr: '10', en: 'Ten' },
+            { value: 11, kr: '시종', en: 'Page' },
+            { value: 12, kr: '기사', en: 'Knight' },
+            { value: 13, kr: '여왕', en: 'Queen' },
+            { value: 14, kr: '왕', en: 'King' },
+        ];
+
+        const MINOR_SUIT_PROFILES = {
+            wands: {
+                uprightSummary: '의지와 추진 에너지가 살아나며',
+                reversedSummary: '의욕은 있으나 속도와 방향이 흔들리며',
+                keywordCore: ['동력', '실행', '도전'],
+                advice: ['핵심 목표 1개에 화력을 집중하세요', '착수와 마감 시간을 함께 고정하세요'],
+                caution: ['과속으로 디테일을 놓치지 마세요', '흥분 상태의 즉흥 결정을 피하세요'],
+            },
+            cups: {
+                uprightSummary: '감정과 관계의 흐름이 부드럽게 이어지며',
+                reversedSummary: '감정 기복과 기대 불일치가 커지며',
+                keywordCore: ['관계', '공감', '정서'],
+                advice: ['감정을 한 문장으로 정리한 뒤 대화하세요', '관계의 경계를 먼저 확인하세요'],
+                caution: ['눈치로만 결정하지 마세요', '기분에 따라 약속을 바꾸지 마세요'],
+            },
+            swords: {
+                uprightSummary: '판단과 의사결정의 선명도가 올라가며',
+                reversedSummary: '생각이 과열되어 충돌 가능성이 커지며',
+                keywordCore: ['판단', '전략', '정리'],
+                advice: ['팩트와 해석을 분리해 기록하세요', '결정 기준 2개를 먼저 고정하세요'],
+                caution: ['날카로운 표현으로 관계를 소모하지 마세요', '완벽한 답만 기다리며 지연하지 마세요'],
+            },
+            pentacles: {
+                uprightSummary: '현실성과 축적의 리듬이 단단해지며',
+                reversedSummary: '현실 이슈와 지연 요인이 누적되며',
+                keywordCore: ['현실', '자원', '축적'],
+                advice: ['작은 산출물을 빠르게 눈에 보이게 만드세요', '리소스 배분을 주간 단위로 점검하세요'],
+                caution: ['익숙함만 고집해 기회를 놓치지 마세요', '과도한 안전지향으로 타이밍을 놓치지 마세요'],
+            },
+        };
+
+        const MINOR_RANK_PROFILES = {
+            1: {
+                stage: '시작점',
+                focus: ['시작', '가능성'],
+                upright: '새 출발의 문이 열립니다.',
+                reversed: '출발 신호가 약해 망설임이 길어질 수 있습니다.',
+                advice: ['완벽보다 시작을 선택하세요', '첫 단계 산출물만 정의하세요'],
+                caution: ['준비만 하다 타이밍을 놓치지 마세요'],
+            },
+            2: {
+                stage: '균형',
+                focus: ['선택', '조율'],
+                upright: '선택지 사이 균형 감각이 중요해집니다.',
+                reversed: '저울이 기울어 우선순위 혼선이 생길 수 있습니다.',
+                advice: ['기준 1개를 먼저 고정하세요', '동시에 잡은 일 1개를 내려놓으세요'],
+                caution: ['양쪽을 모두 만족시키려다 지치지 마세요'],
+            },
+            3: {
+                stage: '확장',
+                focus: ['협업', '성장'],
+                upright: '협업과 확장에서 성과가 커질 수 있습니다.',
+                reversed: '협업 리듬이 어긋나 재작업이 늘 수 있습니다.',
+                advice: ['역할과 마감 책임자를 명확히 하세요', '중간 공유 주기를 짧게 가져가세요'],
+                caution: ['합의 없는 확장을 피하세요'],
+            },
+            4: {
+                stage: '안정',
+                focus: ['기반', '보존'],
+                upright: '기반을 다지고 지키는 데 유리합니다.',
+                reversed: '고정관념이 기회를 막을 수 있습니다.',
+                advice: ['지킬 것과 바꿀 것을 구분하세요', '안정 장치를 1개만 강화하세요'],
+                caution: ['방어적 태도로 소통을 끊지 마세요'],
+            },
+            5: {
+                stage: '긴장',
+                focus: ['갈등', '우선순위'],
+                upright: '마찰 속에서 핵심 우선순위가 드러납니다.',
+                reversed: '소모적 갈등이 길어질 수 있습니다.',
+                advice: ['이길 문제와 풀 문제를 구분하세요', '손실 최소화 기준을 먼저 세우세요'],
+                caution: ['감정 승부를 피하세요'],
+            },
+            6: {
+                stage: '회복',
+                focus: ['정돈', '회복'],
+                upright: '정돈과 회복이 가능한 흐름입니다.',
+                reversed: '정리 미완으로 같은 이슈가 반복될 수 있습니다.',
+                advice: ['정리 루틴을 짧게라도 재개하세요', '과거 이슈를 1개 마감 처리하세요'],
+                caution: ['좋아 보이는 미봉책에 의존하지 마세요'],
+            },
+            7: {
+                stage: '시험',
+                focus: ['버팀', '경계'],
+                upright: '입장 차이를 조율하며 버티는 힘이 필요합니다.',
+                reversed: '방어 과다로 관계 소모가 커질 수 있습니다.',
+                advice: ['양보 가능한 선을 먼저 정하세요', '반박보다 질문으로 확인하세요'],
+                caution: ['고집으로 상황을 고착시키지 마세요'],
+            },
+            8: {
+                stage: '가속',
+                focus: ['속도', '몰입'],
+                upright: '속도와 몰입이 붙는 구간입니다.',
+                reversed: '속도 불균형으로 누락이 발생할 수 있습니다.',
+                advice: ['짧은 점검 주기를 넣으세요', '진행률을 수치로 관리하세요'],
+                caution: ['빨리 하는 것만 목표로 두지 마세요'],
+            },
+            9: {
+                stage: '완성 직전',
+                focus: ['마무리', '집중'],
+                upright: '마무리 단계의 완성도가 올라갑니다.',
+                reversed: '피로 누적으로 마감 품질이 흔들릴 수 있습니다.',
+                advice: ['최종 검토 체크리스트를 적용하세요', '휴식 시간을 일정에 포함하세요'],
+                caution: ['버티기만으로 밀어붙이지 마세요'],
+            },
+            10: {
+                stage: '전환점',
+                focus: ['종료', '다음 단계'],
+                upright: '한 사이클을 정리하고 다음 단계로 넘어갈 시점입니다.',
+                reversed: '마감 지연이 다음 단계까지 영향을 줄 수 있습니다.',
+                advice: ['종료 기준을 명확히 선언하세요', '다음 단계 착수 조건을 정하세요'],
+                caution: ['완벽주의로 종료를 미루지 마세요'],
+            },
+            11: {
+                stage: '학습',
+                focus: ['탐색', '학습'],
+                upright: '새로운 관점과 학습이 기회를 확장합니다.',
+                reversed: '미숙함이 드러나 시행착오가 커질 수 있습니다.',
+                advice: ['피드백을 빠르게 반영하세요', '기초를 먼저 보강하세요'],
+                caution: ['모르는 것을 감추지 마세요'],
+            },
+            12: {
+                stage: '돌진',
+                focus: ['행동', '돌파'],
+                upright: '행동력이 강해 돌파에 유리합니다.',
+                reversed: '조급함으로 오판할 가능성이 큽니다.',
+                advice: ['진입 전 리스크 1개를 줄이세요', '속도보다 방향 확인을 먼저 하세요'],
+                caution: ['충동적 확장을 피하세요'],
+            },
+            13: {
+                stage: '숙련',
+                focus: ['운영', '조율'],
+                upright: '성숙한 조율과 안정적 운영이 빛납니다.',
+                reversed: '과잉 통제로 유연성이 떨어질 수 있습니다.',
+                advice: ['팀 리듬을 살리는 조율을 하세요', '핵심만 통제하고 나머지는 위임하세요'],
+                caution: ['세부 통제로 에너지를 소모하지 마세요'],
+            },
+            14: {
+                stage: '통치',
+                focus: ['책임', '리더십'],
+                upright: '결정권과 책임을 바르게 행사할 때입니다.',
+                reversed: '권한 사용의 불균형이 반발을 만들 수 있습니다.',
+                advice: ['결정 이유를 투명하게 공유하세요', '책임과 권한을 함께 배분하세요'],
+                caution: ['독단적 지시를 경계하세요'],
+            },
+        };
+
+        const MINOR_ARCANA = MINOR_SUITS.flatMap((suit) =>
+            MINOR_RANKS.map((rank) => {
+                const suitProfile = MINOR_SUIT_PROFILES[suit.key];
+                const rankProfile = MINOR_RANK_PROFILES[rank.value];
+                return {
+                    id: `min_${suit.key}_${rank.value}`,
+                    arcana: 'minor',
+                    number: null,
+                    suit: suit.key,
+                    rank: rank.value,
+                    label_kr: `${suit.kr} ${rank.kr}`,
+                    label_en: `${rank.en} of ${suit.en}`,
+                    keywords_upright: [...suit.upright, ...suitProfile.keywordCore, ...rankProfile.focus],
+                    keywords_reversed: [...suit.reversed, ...suitProfile.keywordCore, ...rankProfile.focus],
+                    meaning: {
+                        upright: {
+                            summary: `${suit.kr}의 ${rank.kr} (${rankProfile.stage}): ${suitProfile.uprightSummary} ${rankProfile.upright}`,
+                            advice: [suitProfile.advice[0], rankProfile.advice[0], rankProfile.advice[1]],
+                            caution: [suitProfile.caution[0], rankProfile.caution[0]],
+                        },
+                        reversed: {
+                            summary: `${suit.kr}의 ${rank.kr} (${rankProfile.stage}): ${suitProfile.reversedSummary} ${rankProfile.reversed}`,
+                            advice: [suitProfile.advice[1], rankProfile.advice[1], rankProfile.advice[0]],
+                            caution: [suitProfile.caution[1], rankProfile.caution[0]],
+                        },
+                    },
+                    image_front: `card/${suit.key}/${rank.value}.jpg`,
+                    image_back: null,
+                };
+            })
+        );
+
+        const TAROT78 = [...MAJOR_ARCANA, ...MINOR_ARCANA];
+        const TAROT_BACK_IMAGE = 'card_back_purple.svg';
+        const SPREAD = [
+            { key: 'past', label: '과거' },
+            { key: 'present', label: '현재' },
+            { key: 'future', label: '미래' },
+        ];
+
+        const shuffleCards = (cards) => {
+            const next = [...cards];
+            for (let i = next.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [next[i], next[j]] = [next[j], next[i]];
+            }
+            return next;
+        };
+
+        const readMeaning = (card) => (card?.reversed ? card?.meaning?.reversed : card?.meaning?.upright);
+        const readKeywords = (card) => (card?.reversed ? card?.keywords_reversed : card?.keywords_upright) || [];
+
+        const buildLine = (card) => {
+            const summary = readMeaning(card)?.summary || '해석 정보가 없습니다.';
+            const keywordText = readKeywords(card).slice(0, 3).join(' · ');
+            const directionText = card.reversed ? '역방향' : '정방향';
+            const arcanaHint =
+                card.arcana === 'major'
+                    ? '이 카드는 큰 방향 전환이나 인생의 굵은 흐름과 맞닿아 있습니다.'
+                    : '이 카드는 일상 습관, 실무, 관계처럼 현실적인 영역에서 작동하는 흐름입니다.';
+            if (card.position === 'past') {
+                return `과거 자리의 ${card.label_kr} (${directionText})는 '${keywordText}' 흐름이 누적되어 현재 상황의 배경이 되었음을 보여줍니다. ${summary} ${arcanaHint}`;
+            }
+            if (card.position === 'present') {
+                return `현재 자리의 ${card.label_kr} (${directionText})는 지금 가장 먼저 다뤄야 할 핵심이 '${keywordText}' 임을 말합니다. ${summary} ${arcanaHint}`;
+            }
+            return `미래 자리의 ${card.label_kr} (${directionText})는 앞으로 '${keywordText}' 방향으로 전개될 가능성이 큽니다. ${summary} ${arcanaHint}`;
+        };
+
+        const SpreadTarotCard = ({ card, revealed }) => (
+            <div className="flex flex-col items-center gap-2">
+                <div
+                    className="relative w-[98px] h-[152px] md:w-[116px] md:h-[178px] rounded-2xl overflow-hidden shadow-lg border border-slate-200/70 dark:border-slate-700/70"
+                    style={{ perspective: 1000 }}
+                >
+                    <div
+                        className="absolute inset-0 transition-transform duration-700"
+                        style={{
+                            transformStyle: 'preserve-3d',
+                            transform: revealed ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                        }}
+                    >
+                        <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden' }}>
+                            <div className="relative w-full h-full">
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center"
+                                    style={{ backgroundImage: `url('${TAROT_BACK_IMAGE}')` }}
+                                ></div>
+                                <div className="absolute inset-0 bg-black/28"></div>
+                                <div className="absolute inset-[6px] rounded-xl border border-white/20"></div>
+                            </div>
+                        </div>
+                        <div className="absolute inset-0" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                            {card ? (
+                                <div
+                                    className="w-full h-full bg-cover bg-center"
+                                    style={{
+                                        backgroundImage: `url('${card.image_front}')`,
+                                        transform: card.reversed ? 'rotate(180deg)' : 'none',
+                                    }}
+                                ></div>
+                            ) : (
+                                <div className="w-full h-full bg-slate-200 dark:bg-slate-800"></div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                <div className="h-9 text-center">
+                    {card ? (
+                        <div className="text-[11px] md:text-xs font-bold text-slate-700 dark:text-slate-200 leading-tight break-keep">
+                            {card.label_kr} {card.reversed ? '(역)' : '(정)'}
+                        </div>
+                    ) : (
+                        <div className="text-[11px] md:text-xs text-slate-400">미선택</div>
+                    )}
+                </div>
+            </div>
+        );
+
+        const FINAL_QUESTIONS = [
+            {
+                id: 'q1',
+                text: '압박이 높을 때 당신의 기본 반응은 무엇에 가깝나요?',
+                options: {
+                    A: { label: '빠르게 결론을 내리고 먼저 움직인다', delta: { drive: 2, relation: -1, decision: 1 } },
+                    B: { label: '상황을 읽고 사람들의 반응을 먼저 본다', delta: { drive: 0, relation: 2, decision: 0 } },
+                    C: { label: '가능한 시나리오를 비교하며 신중히 고른다', delta: { drive: -1, relation: 0, decision: 2 } },
+                    D: { label: '부담을 줄이기 위해 속도를 낮추고 정비한다', delta: { drive: -2, relation: 1, decision: -1 } },
+                },
+            },
+            {
+                id: 'q2',
+                text: '관계에서 에너지가 가장 많이 소모되는 순간은?',
+                options: {
+                    A: { label: '말보다 행동이 느릴 때', delta: { drive: 1, relation: -1, decision: 1 } },
+                    B: { label: '감정 신호가 맞지 않을 때', delta: { drive: 0, relation: 2, decision: -1 } },
+                    C: { label: '원칙 없이 분위기로만 흘러갈 때', delta: { drive: 0, relation: -1, decision: 2 } },
+                    D: { label: '갈등을 미루며 애매하게 유지할 때', delta: { drive: -1, relation: 1, decision: -1 } },
+                },
+            },
+            {
+                id: 'q3',
+                text: '앞으로 3개월, 가장 강화하고 싶은 감각은?',
+                options: {
+                    A: { label: '기회가 왔을 때 바로 잡는 추진력', delta: { drive: 2, relation: 0, decision: 0 } },
+                    B: { label: '사람의 마음을 읽는 공감력', delta: { drive: 0, relation: 2, decision: 0 } },
+                    C: { label: '흔들리지 않는 판단력', delta: { drive: 0, relation: 0, decision: 2 } },
+                    D: { label: '무리하지 않는 리듬 유지력', delta: { drive: -1, relation: 1, decision: -1 } },
+                },
+            },
+        ];
+
+        const makeZodiacImage = (emoji, from, to) =>
+            `data:image/svg+xml;utf8,${encodeURIComponent(
+                `<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512'>
+                    <defs>
+                        <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+                            <stop offset='0%' stop-color='${from}'/>
+                            <stop offset='100%' stop-color='${to}'/>
+                        </linearGradient>
+                    </defs>
+                    <rect width='512' height='512' rx='72' fill='url(#g)'/>
+                    <circle cx='256' cy='256' r='185' fill='rgba(255,255,255,0.18)'/>
+                    <text x='50%' y='56%' dominant-baseline='middle' text-anchor='middle' font-size='210'>${emoji}</text>
+                </svg>`
+            )}`;
+
+        const ZODIAC_DATA = [
+            { key: 'rat', label: '쥐', emoji: '🐭', color: ['#0f172a', '#334155'], archetype: '상황판단형', focus: '기회 포착', line: '흐름이 바뀌기 직전의 미세한 신호를 잘 읽습니다.' },
+            { key: 'ox', label: '소', emoji: '🐮', color: ['#3f3f46', '#52525b'], archetype: '축적지속형', focus: '지속 실행', line: '눈에 띄지 않아도 꾸준히 쌓아 결과를 만듭니다.' },
+            { key: 'tiger', label: '호랑이', emoji: '🐯', color: ['#7c2d12', '#ea580c'], archetype: '돌파행동형', focus: '결단과 추진', line: '결정이 필요한 순간에 과감하게 판을 넘길 수 있습니다.' },
+            { key: 'rabbit', label: '토끼', emoji: '🐰', color: ['#9d174d', '#ec4899'], archetype: '관계감응형', focus: '정서 균형', line: '관계의 온도를 빠르게 감지하고 부드럽게 조율합니다.' },
+            { key: 'dragon', label: '용', emoji: '🐲', color: ['#312e81', '#6366f1'], archetype: '비전확장형', focus: '큰 그림 설계', line: '단기 이슈보다 장기 방향을 붙잡는 힘이 강합니다.' },
+            { key: 'snake', label: '뱀', emoji: '🐍', color: ['#14532d', '#16a34a'], archetype: '전략통찰형', focus: '핵심 파고들기', line: '겉보다 본질을 보는 시선이 날카로운 편입니다.' },
+            { key: 'horse', label: '말', emoji: '🐴', color: ['#7c2d12', '#f97316'], archetype: '속도추진형', focus: '실행 가속', line: '멈추기보다 움직이며 해답을 찾는 타입입니다.' },
+            { key: 'goat', label: '양', emoji: '🐑', color: ['#166534', '#4ade80'], archetype: '균형회복형', focus: '관계 안정', line: '지친 흐름을 부드럽게 회복시키는 감각이 좋습니다.' },
+            { key: 'monkey', label: '원숭이', emoji: '🐵', color: ['#1d4ed8', '#38bdf8'], archetype: '유연전환형', focus: '상황 대응', line: '예상 밖 변수에서도 빠르게 루트를 바꿀 수 있습니다.' },
+            { key: 'rooster', label: '닭', emoji: '🐔', color: ['#b91c1c', '#f43f5e'], archetype: '정밀관리형', focus: '디테일 통제', line: '흩어진 요소를 정돈해 완성도를 끌어올립니다.' },
+            { key: 'dog', label: '개', emoji: '🐶', color: ['#1f2937', '#0ea5e9'], archetype: '신뢰수호형', focus: '책임과 의리', line: '관계에서 신뢰를 지키려는 책임감이 강합니다.' },
+            { key: 'pig', label: '돼지', emoji: '🐷', color: ['#831843', '#fb7185'], archetype: '안정풍요형', focus: '생활 리듬', line: '성과와 삶의 균형을 함께 챙기는 감각이 좋습니다.' },
+        ].map((item) => ({ ...item, image: makeZodiacImage(item.emoji, item.color[0], item.color[1]) }));
+
+        const normalizeMod = (n, m) => ((n % m) + m) % m;
+
+        const tarotShiftValue = (tarotSpread) => {
+            const cards = Array.isArray(tarotSpread) ? tarotSpread : tarotSpread ? [tarotSpread] : [];
+            if (!cards.length) return 0;
+            const suitShift = { wands: 2, cups: 5, swords: 8, pentacles: 11 };
+            const total = cards.reduce((acc, card, idx) => {
+                if (!card) return acc;
+                if (card.arcana === 'major') {
+                    return acc + (card.number || 0) + (card.reversed ? 3 : 0) + idx;
+                }
+                const base = suitShift[card.suit] || 0;
+                return acc + base + (card.rank || 0) + (card.reversed ? 2 : 0) + idx;
+            }, 0);
+            return normalizeMod(total, 12);
+        };
+
+        const FinalQuestionsScreen = () => {
             const navigate = useNavigate();
             const location = useLocation();
+            const tarotSpread = Array.isArray(location.state?.tarotSpread)
+                ? location.state.tarotSpread
+                : location.state?.tarotPick
+                ? [location.state.tarotPick]
+                : [];
             const birthData = location.state?.birthData || null;
-            const [step, setStep] = useState(0);
-            const [phase, setPhase] = useState('idle');
-            const [spread, setSpread] = useState([]);
-            const [pickedThisStep, setPickedThisStep] = useState(null);
-            const [detailCard, setDetailCard] = useState(null);
 
-            const deck = DECK_ORDER[step];
-            const totalSteps = DECK_ORDER.length;
+            const [index, setIndex] = useState(0);
+            const [scores, setScores] = useState({ drive: 0, relation: 0, decision: 0 });
+            const [answers, setAnswers] = useState([]);
 
-            useEffect(() => {
-                if (pickedTarots.length > 0) {
-                    setPickedTarots([]);
+            const current = FINAL_QUESTIONS[index];
+            const progress = Math.round(((index + 1) / FINAL_QUESTIONS.length) * 100);
+
+            const onSelect = (optionKey) => {
+                const option = current.options[optionKey];
+                const nextScores = {
+                    drive: scores.drive + option.delta.drive,
+                    relation: scores.relation + option.delta.relation,
+                    decision: scores.decision + option.delta.decision,
+                };
+                const nextAnswers = [...answers, { id: current.id, option: optionKey, label: option.label }];
+                const isLast = index + 1 >= FINAL_QUESTIONS.length;
+
+                setScores(nextScores);
+                setAnswers(nextAnswers);
+
+                if (isLast) {
+                    navigate('/result3', {
+                        state: {
+                            tarotSpread,
+                            birthData,
+                            finalScores: nextScores,
+                            finalAnswers: nextAnswers,
+                        },
+                    });
+                    return;
                 }
-                setStep(0);
-                setPhase('idle');
-                setPickedThisStep(null);
-            }, []);
-
-            useEffect(() => {
-                const cards = deckCards(deck);
-                const count = deckSpreadCount(deck);
-                setSpread(sampleCards(cards, count));
-                setPhase('idle');
-                setPickedThisStep(null);
-            }, [deck]);
-
-            const onPick = (card) => {
-                if (phase !== 'idle') return;
-                setPickedThisStep(card);
-                setPhase('revealing');
-                setPickedTarots((prev) => [...prev, { deck, id: card.id }]);
-                setTimeout(() => setPhase('revealed'), 750);
-            };
-
-            const onNext = () => {
-                if (step + 1 >= totalSteps) {
-                    navigate('/result', { state: { birthData } });
-                } else {
-                    setStep((prev) => prev + 1);
-                }
-            };
-
-            const titleMap = {
-                core: { title: '정체성 카드', desc: '당신의 기본 역할(코어)을 고르세요.' },
-                pattern: { title: '습관 카드', desc: '당신의 행동 방식(패턴)을 고르세요.' },
-                flow: { title: '흐름 카드', desc: '오늘의 흐름을 닮은 한 장을 고르세요. (마지막 카드가 지역을 결정합니다)' },
+                setIndex((prev) => prev + 1);
             };
 
             return (
-                <AppScreen>
-                        <header className="flex items-center justify-between p-4 pb-2">
-                            <button
-                                onClick={() => navigate(-1)}
-                                className="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800"
-                            >
-                                <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+                <AppScreen frameClassName="text-slate-900 dark:text-slate-100">
+                    <header className="px-6 pt-6 pb-3">
+                        <div className="flex items-center justify-between mb-4">
+                            <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 flex items-center justify-center">
+                                <span className="material-symbols-outlined">arrow_back</span>
                             </button>
-                            <div className="text-center">
-                                <div className="text-sm font-bold tracking-widest uppercase">타로 선택</div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                    {step + 1} / {totalSteps}
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => navigate('/')}
-                                className="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800"
-                            >
-                                <span className="material-symbols-outlined text-[24px]">close</span>
+                            <div className="text-xs font-bold tracking-widest text-primary uppercase">마지막 질문</div>
+                            <button onClick={() => navigate('/')} className="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 flex items-center justify-center">
+                                <span className="material-symbols-outlined">close</span>
                             </button>
-                        </header>
+                        </div>
+                        <div className="flex justify-between items-end px-1 mb-2">
+                            <span className="text-[11px] font-semibold text-primary/80 uppercase tracking-wider">보정 단계</span>
+                            <span className="text-sm font-bold text-primary">3 <span className="text-slate-400 dark:text-slate-600 font-light text-xs ml-1">/ 4</span></span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
+                        </div>
+                    </header>
 
-                        <div className="w-full px-6 py-2">
-                            <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-primary rounded-full transition-all"
-                                    style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
-                                ></div>
-                            </div>
+                    <main className="flex-1 px-6 pb-8">
+                        <div className="mt-6 mb-6">
+                            <h2 className="text-2xl font-black leading-snug text-slate-900 dark:text-white">{current.text}</h2>
+                            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">사주와 타로로 부족한 부분을 보정해 12지신 결과를 정밀화합니다.</p>
                         </div>
 
-                        <div className="px-6 pt-2 pb-2">
-                            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                                {titleMap[deck].title}
-                            </h1>
-                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed break-keep">
-                                {titleMap[deck].desc}
-                            </p>
+                        <div className="space-y-3">
+                            {Object.entries(current.options).map(([key, option]) => (
+                                <button
+                                    key={key}
+                                    onClick={() => onSelect(key)}
+                                    className="w-full text-left p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-surface-dark hover:border-primary/60 transition-all"
+                                >
+                                    <div className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-relaxed">{option.label}</div>
+                                </button>
+                            ))}
                         </div>
-
-                        <main className="flex-1 px-6 pt-4 pb-28 flex flex-col">
-                            <div className="flex-1 flex items-center justify-center">
-                                <div className={`grid gap-3 ${spread.length <= 3 ? 'grid-cols-3' : 'grid-cols-2'} justify-items-center`}>
-                                    {spread.map((card) => {
-                                        const isSelected = pickedThisStep?.id === card.id;
-                                        const disableOthers = phase !== 'idle' && !isSelected;
-                                        return (
-                                            <FlipCard
-                                                key={card.id}
-                                                card={card}
-                                                onPick={onPick}
-                                                disabled={disableOthers}
-                                                revealed={isSelected && phase !== 'idle'}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div className="mt-6">
-                                <div className="flex items-center justify-between px-1 mb-2">
-                                    <div className="text-xs font-bold tracking-widest text-slate-500 dark:text-slate-400 uppercase">
-                                        Picked
-                                    </div>
-                                    <div className="text-xs text-slate-500 dark:text-slate-400">{pickedTarots.length} 장</div>
-                                </div>
-                                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                                    {pickedTarots.map((p, idx) => {
-                                        const card = findCardById(p.id);
-                                        if (!card) return null;
-                                        return (
-                                            <div
-                                                key={`${p.deck}-${p.id}-${idx}`}
-                                                className={`shrink-0 w-[64px] h-[92px] rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm ${
-                                                    idx === pickedTarots.length - 1 ? 'ring-2 ring-primary/60' : ''
-                                                }`}
-                                                onClick={() => setDetailCard(card)}
-                                            >
-                                                {card.image ? (
-                                                    <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${card.image}')` }}></div>
-                                                ) : (
-                                                    <div
-                                                        className="w-full h-full flex items-center justify-center"
-                                                        style={{ background: BACK_THEMES[card.backTheme] || BACK_THEMES.indigo }}
-                                                    >
-                                                        <span className="material-symbols-outlined text-white text-[28px]">{card.symbol}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </main>
-
-                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background-light via-background-light/95 to-transparent dark:from-background-dark dark:via-background-dark/95">
-                            <button
-                                disabled={phase !== 'revealed'}
-                                onClick={onNext}
-                                className={`w-full h-14 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-all ${
-                                    phase === 'revealed'
-                                        ? 'bg-primary text-white shadow-glow active:scale-[0.98]'
-                                        : 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-500'
-                                }`}
-                            >
-                                <span>{step + 1 >= totalSteps ? '결과 보기' : '다음 카드 뽑기'}</span>
-                                <span className="material-symbols-outlined text-[24px]">arrow_forward</span>
-                            </button>
-                            <p className="mt-3 text-[11px] text-center text-slate-400 dark:text-slate-500 font-medium">
-                                카드 선택은 성향 해석을 위한 상징적 단계입니다.
-                            </p>
-                        </div>
-                        <CardDetailModal card={detailCard} onClose={() => setDetailCard(null)} />
+                    </main>
                 </AppScreen>
             );
         };
 
-        // 5. Result Screen
-        const ResultScreen = ({ pickedTarots }) => {
+        const TarotScreen = () => {
             const navigate = useNavigate();
-            const location = useLocation();
-            const birthData = location.state?.birthData || null;
-
-            const pickedCore = pickedTarots.find((item) => item.deck === 'core');
-            const pickedPattern = pickedTarots.find((item) => item.deck === 'pattern');
-            const pickedFlow = pickedTarots[pickedTarots.length - 1];
-
-            const core = CORE_CARDS.find((card) => card.id === pickedCore?.id) || CORE_CARDS[0];
-            const pattern = PATTERN_CARDS.find((card) => card.id === pickedPattern?.id) || PATTERN_CARDS[0];
-            const flow = FLOW_CARDS.find((card) => card.id === pickedFlow?.id) || FLOW_CARDS[0];
-
-            const resultMap = {
-                aurora_bay: {
-                    label: '오로라 해안',
-                    badge: 'AURORA BAY / COAST',
-                    type: '회복 균형형',
-                    image: 'assets/images/result/character_jeju_coast.svg',
-                    adj: '결을 정리하는',
-                    tone: 'cool',
-                    summary: '잔잔한 흐름 속에서 감정의 결을 정리하고 회복을 우선할 때입니다.',
-                    todayLine: '속도를 줄이고 루틴을 되찾는 선택이 가장 빠른 회복으로 이어집니다.',
-                },
-                han_river: {
-                    label: '한강 라인',
-                    badge: 'HAN RIVER / CITY',
-                    type: '속도 상승형',
-                    image: 'assets/images/result/character_city_twilight.svg',
-                    adj: '판을 키우는',
-                    tone: 'neutral',
-                    summary: '확장과 집중이 동시에 필요한 날입니다. 핵심 성과를 전면에 두세요.',
-                    todayLine: '가장 큰 기회는 ‘지금 공개’에서 나옵니다.',
-                },
-                pine_ridge: {
-                    label: '소나무 능선',
-                    badge: 'PINE RIDGE / MOUNTAIN',
-                    type: '정돈 집중형',
-                    image: 'assets/images/result/character_mountain_mist.svg',
-                    adj: '안개를 걷는',
-                    tone: 'mist',
-                    summary: '과한 확장보다 구조 정리가 우선인 흐름입니다.',
-                    todayLine: '버릴 것을 먼저 정리하면 길이 또렷해집니다.',
-                },
-                night_market: {
-                    label: '야시장 거리',
-                    badge: 'NIGHT MARKET / CITY',
-                    type: '기회 확장형',
-                    image: 'assets/images/result/character_city_twilight.svg',
-                    adj: '빛을 모으는',
-                    tone: 'warm',
-                    summary: '사람과 기회가 모이는 흐름입니다. 연결을 넓히세요.',
-                    todayLine: '작은 만남이 큰 기회로 이어질 수 있습니다.',
-                },
-                dawn_field: {
-                    label: '새벽 들판',
-                    badge: 'DAWN FIELD / COAST',
-                    type: '리듬 회복형',
-                    image: 'assets/images/result/character_jeju_coast.svg',
-                    adj: '호흡을 맞추는',
-                    tone: 'soft',
-                    summary: '무리보다 리듬을 되찾는 것이 핵심인 날입니다.',
-                    todayLine: '속도를 낮추면 판단이 선명해집니다.',
-                },
-                cloud_pass: {
-                    label: '구름 고개',
-                    badge: 'CLOUD PASS / MOUNTAIN',
-                    type: '전환 준비형',
-                    image: 'assets/images/result/character_mountain_mist.svg',
-                    adj: '길을 다시 잡는',
-                    tone: 'mist',
-                    summary: '방향을 다시 잡는 시기입니다. 큰 결정을 늦춰도 좋습니다.',
-                    todayLine: '정비가 끝나면 선택이 쉬워집니다.',
-                },
-                harbor_light: {
-                    label: '항구 불빛',
-                    badge: 'HARBOR LIGHT / COAST',
-                    type: '관계 조율형',
-                    image: 'assets/images/result/character_jeju_coast.svg',
-                    adj: '파도를 읽는',
-                    tone: 'cool',
-                    summary: '관계의 흐름을 정리하고 신뢰를 쌓기 좋은 날입니다.',
-                    todayLine: '대화의 온도를 낮추면 더 멀리 갑니다.',
-                },
-                skyline: {
-                    label: '스카이라인',
-                    badge: 'SKYLINE / CITY',
-                    type: '선명 추진형',
-                    image: 'assets/images/result/character_city_twilight.svg',
-                    adj: '성과를 쌓는',
-                    tone: 'neutral',
-                    summary: '목표를 더 선명히 보일수록 성과가 빠르게 쌓입니다.',
-                    todayLine: '한 가지 목표를 공개하면 추진력이 붙습니다.',
-                },
-                stone_valley: {
-                    label: '바위 계곡',
-                    badge: 'STONE VALLEY / MOUNTAIN',
-                    type: '내공 축적형',
-                    image: 'assets/images/result/character_mountain_mist.svg',
-                    adj: '흐름을 다듬는',
-                    tone: 'earth',
-                    summary: '느리지만 확실한 축적이 가장 강한 무기입니다.',
-                    todayLine: '작은 개선이 누적될수록 결과가 커집니다.',
-                },
-                tide_bridge: {
-                    label: '물결 다리',
-                    badge: 'TIDE BRIDGE / COAST',
-                    type: '연결 강화형',
-                    image: 'assets/images/result/character_jeju_coast.svg',
-                    adj: '신뢰를 잇는',
-                    tone: 'soft',
-                    summary: '연결과 협업에서 좋은 흐름이 만들어지는 날입니다.',
-                    todayLine: '서로의 강점을 이어붙이면 속도가 납니다.',
-                },
-                city_pulse: {
-                    label: '도심 맥박',
-                    badge: 'CITY PULSE / CITY',
-                    type: '실행 가속형',
-                    image: 'assets/images/result/character_city_twilight.svg',
-                    adj: '결정을 밀어붙이는',
-                    tone: 'warm',
-                    summary: '지금은 속도를 올려도 되는 구간입니다.',
-                    todayLine: '결정을 미루지 말고 실행으로 옮기세요.',
-                },
-                summit_mist: {
-                    label: '정상 안개',
-                    badge: 'SUMMIT MIST / MOUNTAIN',
-                    type: '리셋 정비형',
-                    image: 'assets/images/result/character_mountain_mist.svg',
-                    adj: '방향을 다듬는',
-                    tone: 'mist',
-                    summary: '흐름을 리셋하고 방향을 정비하는 데 최적인 날입니다.',
-                    todayLine: '비운 자리에 새로운 길이 드러납니다.',
-                },
-            };
-
-            const patternAlias = {
-                rush: '직진형',
-                plan: '설계형',
-                avoid: '거리두기형',
-                rely: '협업형',
-            };
-
-            const resultKeys = Object.keys(resultMap);
-            const hashSeed = `${core.id}:${pattern.id}:${flow.id}`;
-            let hashValue = 0;
-            for (let i = 0; i < hashSeed.length; i += 1) {
-                hashValue = (hashValue * 31 + hashSeed.charCodeAt(i)) % 100000;
-            }
-            const selectedResult = resultMap[resultKeys[hashValue % resultKeys.length]];
-            const characterNameFallback = `${selectedResult.adj} ${patternAlias[pattern.id] || ''} ${core.label}`.replace(/\s+/g, ' ').trim();
-            const summaryFallback = selectedResult.summary || flow.meaning.korea;
-            const todayLineFallback = selectedResult.todayLine || `${flow.meaning.archetype} 흐름에서, 당신의 강점은 '${core.meaning.strength[0]}'로 드러납니다. 다만 '${pattern.meaning.caution[0]}'에 주의하세요.`;
-
-            const [analysisResult, setAnalysisResult] = useState(null);
-            const [analysisError, setAnalysisError] = useState('');
-            const [isAnalyzing, setIsAnalyzing] = useState(false);
-            const [missingImages, setMissingImages] = useState([]);
-
-            const formatBirthDate = (value) => {
-                if (!value) {
-                    return '정보 없음';
-                }
-                return value.replace(/-/g, '. ');
-            };
-            const formatBirthTime = (data) => {
-                if (!data) {
-                    return '정보 없음';
-                }
-                if (data.unknownTime) {
-                    return '시간 모름';
-                }
-                if (data.hour == null || data.minute == null) {
-                    return '정보 없음';
-                }
-                return `${data.hour}:${data.minute}`;
-            };
-            const formatCalendarType = (value) => {
-                if (value === 'lunar') {
-                    return '음력';
-                }
-                return '양력';
-            };
-
-            const selectedLabels = [core.label, pattern.label, flow.label];
-            const analysisPayload = JSON.stringify({
-                birthData,
-                pickedTarots: pickedTarots.map((item) => item.id),
-                pickedCards: {
-                    core,
-                    pattern,
-                    flow,
-                },
-                psychVector: birthData?.psychVector || null,
-            });
+            const [deck, setDeck] = useState([]);
+            const [drawn, setDrawn] = useState([]);
+            const [phase, setPhase] = useState('idle');
 
             useEffect(() => {
-                let cancelled = false;
-                const runAnalysis = async () => {
-                    setIsAnalyzing(true);
-                    setAnalysisError('');
-                    try {
-                        const headers = { 'Content-Type': 'application/json' };
-                        const publicApiKey = (window.__PUBLIC_API_KEY || '').trim();
-                        if (publicApiKey) {
-                            headers['X-API-Key'] = publicApiKey;
-                        }
-
-                        const baseCandidates = [];
-                        const configuredBase = (window.__API_BASE_URL || '').trim();
-                        if (configuredBase) {
-                            baseCandidates.push(configuredBase.replace(/\/+$/, ''));
-                        }
-                        baseCandidates.push('');
-
-                        let data = null;
-                        let lastError = null;
-                        for (const base of baseCandidates) {
-                            const endpoint = `${base}/api/analyze`;
-                            const response = await fetch(endpoint, {
-                                method: 'POST',
-                                headers,
-                                body: analysisPayload,
-                            });
-                            if (response.ok) {
-                                data = await response.json();
-                                break;
-                            }
-
-                            if (response.status === 404 || response.status === 405) {
-                                lastError = new Error('AI API 경로가 배포에 연결되지 않았습니다.');
-                                continue;
-                            }
-
-                            const errorBody = await response.json().catch(() => ({}));
-                            lastError = new Error(errorBody.error || `분석 요청 실패 (HTTP ${response.status})`);
-                            break;
-                        }
-
-                        if (!data) {
-                            throw (lastError || new Error('AI 분석 요청에 실패했습니다.'));
-                        }
-
-                        if (!cancelled) {
-                            setAnalysisResult(data.analysis || null);
-                        }
-                    } catch (error) {
-                        if (!cancelled) {
-                            setAnalysisResult(null);
-                            setAnalysisError(error?.message || 'AI 연결이 불안정해 기본 해석으로 표시합니다.');
-                        }
-                    } finally {
-                        if (!cancelled) {
-                            setIsAnalyzing(false);
-                        }
-                    }
-                };
-                runAnalysis();
-                return () => {
-                    cancelled = true;
-                };
-            }, [analysisPayload]);
-
-            useEffect(() => {
-                let cancelled = false;
-                const entries = Object.values(resultMap);
-                const missing = [];
-                let resolved = 0;
-                const done = () => {
-                    if (!cancelled && resolved === entries.length) {
-                        setMissingImages(missing);
-                    }
-                };
-                entries.forEach((entry) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        resolved += 1;
-                        done();
-                    };
-                    img.onerror = () => {
-                        missing.push(entry.image);
-                        resolved += 1;
-                        done();
-                    };
-                    img.src = entry.image;
-                });
-                return () => {
-                    cancelled = true;
-                };
+                setDeck(shuffleCards(TAROT78));
+                setDrawn([]);
+                setPhase('idle');
             }, []);
 
-            const characterName = analysisResult?.title || characterNameFallback;
-            const summary = analysisResult?.summary || summaryFallback;
-            const todayLine = analysisResult?.todayLine || todayLineFallback;
-            const advicePrimary = analysisResult?.actions?.[0] || null;
-            const adviceSecondary = analysisResult?.actions?.[1] || null;
+            const drawOne = () => {
+                if (phase === 'drawing') return;
+                if (drawn.length >= 3) return;
+                const nextMeta = deck[drawn.length];
+                if (!nextMeta) return;
 
-            const handleWalkAction = () => {
-                window.open('https://www.google.com/search?q=20%EB%B6%84+%ED%83%80%EC%9D%B4%EB%A8%B8', '_blank', 'noopener,noreferrer');
-            };
-            const handleNoteAction = () => {
-                const input = window.prompt('오늘 완료한 1가지를 기록해 보세요.');
-                if (input == null) {
-                    return;
-                }
-                const memo = input.trim();
-                if (!memo) {
-                    window.alert('내용을 입력해 주세요.');
-                    return;
-                }
-                const payload = {
-                    memo,
-                    createdAt: new Date().toISOString(),
-                };
-                window.localStorage.setItem('life_position_daily_note', JSON.stringify(payload));
-                window.alert('기록이 저장되었습니다.');
-            };
-            const handleShareResult = async () => {
-                const shareText = [
-                    `선택 카드: ${selectedLabels.join(' -> ')}`,
-                    `캐릭터: ${characterName}`,
-                    `요약: ${summary}`,
-                ].join('\n');
-                try {
-                    if (navigator.share) {
-                        await navigator.share({
-                            title: '인생 포지션 분석 결과',
-                            text: shareText,
-                        });
-                        return;
-                    }
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        await navigator.clipboard.writeText(shareText);
-                        window.alert('분석 결과가 클립보드에 복사되었습니다.');
-                        return;
-                    }
-                    window.alert(shareText);
-                } catch (error) {
-                    window.alert(`공유 중 오류가 발생했습니다: ${error?.message || error}`);
-                }
-            };
-
-            const toneOverlay = {
-                cool: 'linear-gradient(180deg, rgba(9,30,66,0.05) 0%, rgba(10,37,63,0.35) 100%)',
-                warm: 'linear-gradient(180deg, rgba(69,26,3,0.05) 0%, rgba(120,53,15,0.35) 100%)',
-                mist: 'linear-gradient(180deg, rgba(15,23,42,0.05) 0%, rgba(71,85,105,0.35) 100%)',
-                soft: 'linear-gradient(180deg, rgba(14,116,144,0.05) 0%, rgba(30,64,175,0.25) 100%)',
-                earth: 'linear-gradient(180deg, rgba(30,41,59,0.05) 0%, rgba(99,102,241,0.25) 100%)',
-                neutral: 'linear-gradient(180deg, rgba(2,6,23,0.02) 0%, rgba(30,41,59,0.2) 100%)',
+                setPhase('drawing');
+                const picked = { ...nextMeta, reversed: Math.random() < 0.5 };
+                setTimeout(() => {
+                    const nextSpread = [...drawn, picked];
+                    setDrawn(nextSpread);
+                    setPhase(nextSpread.length >= 3 ? 'done' : 'idle');
+                }, 120);
             };
 
             return (
-                <AppScreen outerClassName="selection:bg-primary/30" frameClassName="font-display text-slate-900 dark:text-slate-100 mx-auto">
-                        <header className="flex items-center px-4 py-3 sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-100/50 dark:border-slate-800/50">
-                            <button
-                                onClick={() => navigate(-1)}
-                                className="text-slate-900 dark:text-slate-100 flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
-                            >
-                                <span className="material-symbols-outlined">arrow_back</span>
-                            </button>
-                            <h1 className="text-slate-900 dark:text-slate-100 text-base font-bold flex-1 text-center tracking-tight">인생 포지션 분석</h1>
-                            <button className="text-slate-900 dark:text-slate-100 flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                                <span className="material-symbols-outlined">more_vert</span>
-                            </button>
-                        </header>
-                        <main className="flex-1 flex flex-col pb-32 px-5">
-                            <div className="mt-3 mb-2">
-                                <div className="flex justify-between items-end px-1 mb-2">
-                                    <span className="text-[11px] font-semibold text-primary/80 uppercase tracking-wider">결과 단계</span>
-                                    <span className="text-sm font-bold text-primary">4 <span className="text-slate-400 dark:text-slate-600 font-light text-xs align-baseline ml-0.5">/ 4</span></span>
-                                </div>
-                                <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div className="h-full bg-primary rounded-full" style={{ width: '100%' }}></div>
-                                </div>
-                                <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-                                    선택 카드: {selectedLabels.join(' → ')}
-                                </p>
-                            </div>
-                            {missingImages.length > 0 && (
-                                <div className="mt-2 text-[11px] text-amber-600 dark:text-amber-400 bg-amber-50/70 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl px-3 py-2">
-                                    누락된 결과 이미지가 있습니다: {missingImages.join(', ')}
-                                </div>
-                            )}
-                            {isAnalyzing && (
-                                <p className="mt-1 text-xs font-semibold text-primary">OpenAI 분석 중입니다...</p>
-                            )}
-                            {analysisError && (
-                                <p className="mt-1 text-xs font-semibold text-rose-500">OpenAI 연결 오류: {analysisError}</p>
-                            )}
-                            <div className="bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-card text-sm text-slate-600 dark:text-slate-300">
-                                <div className="flex items-center justify-between">
-                                    <span className="font-semibold text-slate-500 dark:text-slate-400">생년월일</span>
-                                    <span className="font-bold text-slate-900 dark:text-white">{formatBirthDate(birthData?.date)}</span>
-                                </div>
-                                <div className="flex items-center justify-between mt-2">
-                                    <span className="font-semibold text-slate-500 dark:text-slate-400">태어난 시간</span>
-                                    <span className="font-bold text-slate-900 dark:text-white">{formatBirthTime(birthData)}</span>
-                                </div>
-                                <div className="flex items-center justify-between mt-2">
-                                    <span className="font-semibold text-slate-500 dark:text-slate-400">달력 기준</span>
-                                    <span className="font-bold text-slate-900 dark:text-white">{formatCalendarType(birthData?.calendarType)}</span>
-                                </div>
-                            </div>
-                            <div className="relative w-full aspect-[4/5] mt-4 rounded-2xl overflow-hidden shadow-soft group mx-auto max-w-[360px]">
-                                <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style={{ backgroundImage: `url('${selectedResult.image}')` }}></div>
-                                <div className="absolute inset-0 bg-gradient-to-t from-background-light dark:from-background-dark via-transparent to-transparent opacity-80"></div>
-                                <div className="absolute inset-0 mix-blend-overlay" style={{ background: toneOverlay[selectedResult.tone] || toneOverlay.neutral }}></div>
-                                <div className="absolute top-4 left-4 bg-surface-light/30 dark:bg-surface-dark/30 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
-                                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                                    <span className="text-[10px] font-bold text-white tracking-widest uppercase">{selectedResult.badge}</span>
-                                </div>
-                                <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center text-center translate-y-2">
-                                    <div className="inline-block px-3 py-1 mb-2 rounded-full bg-primary/90 backdrop-blur-sm shadow-glow border border-primary/20">
-                                        <span className="text-[11px] font-bold text-white uppercase tracking-wider">{selectedResult.type}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-center text-center mt-6 mb-8">
-                                <h2 className="text-4xl font-black text-slate-900 dark:text-white leading-[1.1] tracking-tight mb-3">
-                                    {characterName}
-                                </h2>
-                                <div className="h-px w-8 bg-primary/30 my-3"></div>
-                                <p className="text-secondary-text dark:text-slate-400 text-sm font-medium italic mt-1 max-w-[300px] leading-relaxed opacity-90">
-                                    "{summary}"
-                                </p>
-                            </div>
-                            <div className="space-y-6">
-                                <div className="bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-card relative overflow-hidden group">
-                                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
-                                    <div className="flex items-center gap-2.5 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
-                                        <span className="material-symbols-outlined text-primary text-xl">terminal</span>
-                                        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">오늘의 종합 해석</h3>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center">
-                                            <span className="inline-flex items-center px-2 py-1 rounded bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold font-mono">
-                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                                                STATUS: {flow.stateTag}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-slate-600 dark:text-slate-300 leading-7 font-normal">{todayLine}</p>
-                                    </div>
-                                </div>
-                                <div className="pt-2">
-                                    <div className="flex items-center gap-2 mb-4 px-1">
-                                        <span className="flex h-2 w-2 relative">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                                        </span>
-                                        <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">오늘의 추천 행동</h3>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-3">
-                                        <button
-                                            onClick={handleWalkAction}
-                                            className="flex items-center p-4 bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm active:scale-[0.98] transition-all group text-left"
-                                        >
-                                            <div className="w-12 h-12 rounded-xl bg-primary/5 dark:bg-white/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300 shrink-0">
-                                                <span className="material-symbols-outlined text-[24px]">smartphone</span>
-                                            </div>
-                                            <div className="ml-4 flex-1">
-                                                <h4 className="text-[15px] font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
-                                                    {advicePrimary?.title || flow.meaning.advice[0]}
-                                                </h4>
-                                                <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-tight">
-                                                    {advicePrimary?.description || core.meaning.advice[0]}
-                                                </p>
-                                            </div>
-                                            <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">arrow_forward_ios</span>
-                                        </button>
-                                        <button
-                                            onClick={handleNoteAction}
-                                            className="flex items-center p-4 bg-surface-light dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm active:scale-[0.98] transition-all group text-left"
-                                        >
-                                            <div className="w-12 h-12 rounded-xl bg-primary/5 dark:bg-white/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300 shrink-0">
-                                                <span className="material-symbols-outlined text-[24px]">edit_note</span>
-                                            </div>
-                                            <div className="ml-4 flex-1">
-                                                <h4 className="text-[15px] font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
-                                                    {adviceSecondary?.title || flow.meaning.advice[1]}
-                                                </h4>
-                                                <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-tight">
-                                                    {adviceSecondary?.description || pattern.meaning.advice[0]}
-                                                </p>
-                                            </div>
-                                            <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors text-lg">arrow_forward_ios</span>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400">
-                                    선택 카드: {selectedLabels.join(' · ')}
-                                </div>
-                            </div>
-                        </main>
-                        <div className="absolute bottom-0 left-0 right-0 w-full p-5 pb-8 bg-gradient-to-t from-background-light via-background-light/95 to-transparent dark:from-background-dark dark:via-background-dark/95 z-40 pointer-events-none h-32 flex items-end">
-                            <button
-                                onClick={handleShareResult}
-                                className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 px-6 rounded-2xl shadow-glow flex items-center justify-center gap-3 transition-all active:scale-[0.97] pointer-events-auto"
-                            >
-                                <span className="material-symbols-outlined text-[22px]">ios_share</span>
-                                <span className="text-[15px] tracking-wide">분석 결과 공유하기</span>
-                            </button>
+                <AppScreen>
+                    <header className="flex items-center justify-between p-4">
+                        <button onClick={() => navigate('/')} className="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800">
+                            <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+                        </button>
+                        <div className="text-center">
+                            <div className="text-sm font-bold tracking-widest uppercase">타로 3장 뽑기</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">버튼을 눌러 한 장씩 공개합니다</div>
                         </div>
+                        <button onClick={() => navigate('/')} className="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800">
+                            <span className="material-symbols-outlined text-[24px]">close</span>
+                        </button>
+                    </header>
+
+                    <main className="flex-1 px-5 pt-4 pb-28 overflow-y-auto">
+                        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 overflow-x-auto no-scrollbar">
+                            <div className="flex gap-1.5 min-w-max">
+                                {Array.from({ length: 18 }, (_, idx) => (
+                                    <div key={idx} className="w-[52px] h-[78px] rounded-lg overflow-hidden border border-slate-300/80 dark:border-slate-600/80 shadow-sm">
+                                        <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${TAROT_BACK_IMAGE}')` }}></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="rounded-3xl border border-slate-200/80 dark:border-slate-700/80 bg-white/80 dark:bg-slate-900/70 p-4 shadow-sm">
+                            <div className="grid grid-cols-3 gap-3">
+                                {[0, 1, 2].map((idx) => {
+                                    const card = drawn[idx];
+                                    return (
+                                        <div key={idx} className="flex flex-col items-center">
+                                            <div className="relative w-full aspect-[3/5] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm">
+                                                {card ? (
+                                                    <>
+                                                        <div
+                                                            className="absolute inset-0 bg-cover bg-center"
+                                                            style={{
+                                                                backgroundImage: `url('${card.image_front}')`,
+                                                                transform: card.reversed ? 'rotate(180deg)' : 'none',
+                                                            }}
+                                                        ></div>
+                                                        <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px] font-bold">
+                                                            {card.reversed ? '역' : '정'}
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <span className="text-xs text-slate-400">대기</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {drawn.length > 0 && (
+                            <div className="mt-4 flex flex-col items-center">
+                                <div className="relative w-[220px] h-[330px] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xl">
+                                    <div
+                                        className="absolute inset-0 bg-cover bg-center"
+                                        style={{
+                                            backgroundImage: `url('${drawn[drawn.length - 1].image_front}')`,
+                                            transform: drawn[drawn.length - 1].reversed ? 'rotate(180deg)' : 'none',
+                                        }}
+                                    ></div>
+                                    <div className="absolute left-3 right-3 bottom-3 rounded-lg bg-black/55 text-white text-xs font-semibold text-center py-1.5">
+                                        {drawn[drawn.length - 1].label_kr} {drawn[drawn.length - 1].reversed ? '(역)' : '(정)'}
+                                    </div>
+                                </div>
+                                <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 text-center leading-relaxed">
+                                    {readMeaning(drawn[drawn.length - 1])?.summary || '지금의 흐름을 담은 카드가 선택되었습니다.'}
+                                </p>
+                            </div>
+                        )}
+                    </main>
+
+                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background-light via-background-light/95 to-transparent dark:from-background-dark dark:via-background-dark/95">
+                        <button
+                            onClick={() =>
+                                drawn.length < 3
+                                    ? drawOne()
+                                    : navigate('/birth', { state: { tarotSpread: drawn } })
+                            }
+                            disabled={phase === 'drawing'}
+                            className={`w-full h-14 rounded-2xl font-bold text-lg transition-all ${
+                                phase === 'drawing' ? 'bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-500' : 'bg-primary text-white shadow-glow'
+                            }`}
+                        >
+                            {drawn.length < 3 ? `카드 뽑기 (${drawn.length + 1}/3)` : '사주 입력으로 이동'}
+                        </button>
+                    </div>
+                </AppScreen>
+            );
+        };
+
+        const ResultScreen = () => {
+            const navigate = useNavigate();
+            const location = useLocation();
+            const tarotSpread = Array.isArray(location.state?.tarotSpread)
+                ? location.state.tarotSpread
+                : location.state?.tarotPick
+                ? [location.state.tarotPick]
+                : [];
+            const birthData = location.state?.birthData || null;
+            const finalScores = location.state?.finalScores || { drive: 0, relation: 0, decision: 0 };
+            const finalAnswers = location.state?.finalAnswers || [];
+
+            if (!tarotSpread.length || !birthData) {
+                return (
+                    <AppScreen>
+                        <main className="flex-1 px-6 flex flex-col items-center justify-center gap-4 text-center">
+                            <h2 className="text-2xl font-black text-slate-900 dark:text-white">분석 정보가 부족합니다</h2>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">타로 3장 뽑기부터 다시 진행해주세요.</p>
+                            <button onClick={() => navigate('/tarot')} className="px-5 h-11 rounded-xl bg-primary text-white font-bold">다시 시작</button>
+                        </main>
+                    </AppScreen>
+                );
+            }
+
+            const birthYear = Number.parseInt((birthData.date || '').slice(0, 4), 10) || 1996;
+            const baseIndex = normalizeMod(birthYear - 4, 12);
+            const tarotIndexShift = tarotShiftValue(tarotSpread);
+            const qShift = normalizeMod(finalScores.drive * 2 + finalScores.relation + finalScores.decision, 12);
+            const zodiacIndex = normalizeMod(baseIndex + tarotIndexShift + qShift, 12);
+            const zodiac = ZODIAC_DATA[zodiacIndex];
+            const tarotFocusCard = tarotSpread[1] || tarotSpread[0];
+
+            const mbtiTone =
+                finalScores.decision >= 2
+                    ? 'MBTI의 J 성향처럼 기준을 세우고 정리할수록 안정됩니다.'
+                    : finalScores.drive >= 2
+                    ? 'MBTI의 P 성향처럼 열린 선택지 속에서 기민하게 움직일 때 강점이 살아납니다.'
+                    : '상황에 따라 J/P를 유연하게 오가는 균형형 기질이 보입니다.';
+
+            const relationTone =
+                finalScores.relation >= 2
+                    ? '혈액형 심리에서 A/B형의 대인 감수성을 섞은 듯, 분위기와 감정 결을 섬세하게 읽습니다.'
+                    : finalScores.relation <= -1
+                    ? '혈액형 심리의 O형처럼 목표 중심으로 관계를 단순화할 때 성과가 잘 납니다.'
+                    : '관계와 목표 사이의 균형을 비교적 안정적으로 유지하는 편입니다.';
+
+            const tarotSummary = readMeaning(tarotFocusCard)?.summary || '선택한 카드에서 핵심 흐름이 확인되었습니다.';
+            const tarotKeywords = readKeywords(tarotFocusCard).slice(0, 4).join(' · ');
+            const birthTimeText = birthData.unknownTime ? '시간 모름' : `${birthData.hour}:${birthData.minute}`;
+
+            const actionTips = [
+                `이번 주에는 '${zodiac.focus}' 중심으로 일정 1개를 먼저 완료하세요.`,
+                tarotFocusCard.reversed ? '결정을 미루기보다 검증 단계를 짧게 두고 실행으로 넘어가세요.' : '현재 흐름은 우호적이니 작은 성공 경험을 빠르게 누적하세요.',
+            ];
+
+            return (
+                <AppScreen>
+                    <header className="flex items-center px-4 py-3 sticky top-0 z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-slate-100/50 dark:border-slate-800/50">
+                        <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 flex items-center justify-center">
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <h1 className="text-base font-bold flex-1 text-center tracking-tight">12지신 분석 결과</h1>
+                        <button onClick={() => navigate('/')} className="w-10 h-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 flex items-center justify-center">
+                            <span className="material-symbols-outlined">close</span>
+                        </button>
+                    </header>
+
+                    <main className="flex-1 pb-28 px-5 overflow-y-auto">
+                        <div className="mt-5 text-center">
+                            <div className="inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider bg-primary/10 text-primary border border-primary/20">결과 동물: {zodiac.label}</div>
+                            <h2 className="mt-3 text-3xl font-black text-slate-900 dark:text-white">{zodiac.label}상 ({zodiac.archetype})</h2>
+                            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{zodiac.line}</p>
+                        </div>
+
+                        <div className="mt-5 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg">
+                            <img src={zodiac.image} alt={`${zodiac.label} 이미지`} className="w-full h-auto object-cover" />
+                        </div>
+
+                        <div className="mt-6 grid grid-cols-1 gap-4">
+                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
+                                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">타로에서 읽힌 현재 흐름</div>
+                                <div className="text-sm leading-7 text-slate-700 dark:text-slate-200">{tarotSummary}</div>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {tarotKeywords.split(' · ').filter(Boolean).map((k) => (
+                                        <span key={k} className="px-2 py-1 rounded-full text-[11px] font-semibold bg-primary/10 text-primary border border-primary/20">#{k}</span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
+                                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">사주 리듬 요약</div>
+                                <div className="text-sm leading-7 text-slate-700 dark:text-slate-200">
+                                    출생 정보 {birthData.date} ({birthData.calendarType === 'lunar' ? '음력' : '양력'}), {birthTimeText}를 기준으로 보면, 올해는 '{zodiac.focus}'을 전면에 둘 때 흐름이 열리는 패턴입니다.
+                                </div>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
+                                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">심리 패턴 해석</div>
+                                <div className="text-sm leading-7 text-slate-700 dark:text-slate-200">{mbtiTone}</div>
+                                <div className="mt-2 text-sm leading-7 text-slate-700 dark:text-slate-200">{relationTone}</div>
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
+                                <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">마지막 3문항 반영 포인트</div>
+                                <ul className="text-sm leading-7 text-slate-700 dark:text-slate-200 list-disc pl-5">
+                                    <li>추진 점수: {finalScores.drive}</li>
+                                    <li>관계 점수: {finalScores.relation}</li>
+                                    <li>판단 점수: {finalScores.decision}</li>
+                                </ul>
+                                {finalAnswers.length > 0 && (
+                                    <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">선택 요약: {finalAnswers.map((a) => a.option).join(' · ')}</div>
+                                )}
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
+                                <div className="text-sm font-bold text-slate-900 dark:text-white mb-3">오늘의 실행 제안</div>
+                                <div className="grid gap-2">
+                                    {actionTips.map((tip, idx) => (
+                                        <div key={idx} className="text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white/70 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/80 dark:border-slate-700/80">
+                                            {tip}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+
+                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background-light via-background-light/95 to-transparent dark:from-background-dark dark:via-background-dark/95">
+                        <button onClick={() => navigate('/tarot')} className="w-full h-14 rounded-2xl font-bold text-lg bg-primary text-white shadow-glow active:scale-[0.98]">
+                            다시 시작하기
+                        </button>
+                    </div>
                 </AppScreen>
             );
         };
 
         // --- App Shell ---
         const App = () => {
-            const [pickedTarots, setPickedTarots] = useState([]);
             return (
                 <HashRouter>
                     <Routes>
                         <Route path="/" element={<LandingScreen />} />
                         <Route path="/birth" element={<BirthInputScreen />} />
-                        <Route path="/analysis" element={<AnalysisScreen />} />
-                        <Route path="/tarot" element={<TarotScreen pickedTarots={pickedTarots} setPickedTarots={setPickedTarots} />} />
-                        <Route path="/result" element={<ResultScreen pickedTarots={pickedTarots} />} />
+                        <Route path="/final-questions" element={<FinalQuestionsScreen />} />
+                        <Route path="/tarot" element={<TarotScreen />} />
+                        <Route path="/result" element={<ResultScreen />} />
+                        <Route path="/result3" element={<ResultScreen />} />
                     </Routes>
                 </HashRouter>
             );

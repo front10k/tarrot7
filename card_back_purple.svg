@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="1024" viewBox="0 0 640 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2d0f53"/>
+      <stop offset="55%" stop-color="#3b1d73"/>
+      <stop offset="100%" stop-color="#1b0a35"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd977" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#ffd977" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="640" height="1024" rx="42" fill="url(#bg)"/>
+  <rect x="14" y="14" width="612" height="996" rx="34" fill="none" stroke="#ba8a2d" stroke-width="4"/>
+  <rect x="28" y="28" width="584" height="968" rx="30" fill="none" stroke="#e2b24d" stroke-width="2" opacity="0.72"/>
+
+  <g opacity="0.5" stroke="#f0c46a" stroke-width="3" fill="none">
+    <path d="M74 84h92m-92 0v76m0-76l30 28"/>
+    <path d="M566 84h-92m92 0v76m0-76l-30 28"/>
+    <path d="M74 940h92m-92 0v-76m0 76l30-28"/>
+    <path d="M566 940h-92m92 0v-76m0 76l-30-28"/>
+  </g>
+
+  <circle cx="320" cy="512" r="210" fill="url(#glow)"/>
+
+  <g transform="translate(320 512)" stroke="#f2c75f" fill="none">
+    <circle r="118" stroke-width="5"/>
+    <circle r="76" stroke-width="4"/>
+    <circle r="24" fill="#f2c75f" stroke="none"/>
+    <g stroke-width="4">
+      <line x1="0" y1="-170" x2="0" y2="-120"/>
+      <line x1="0" y1="170" x2="0" y2="120"/>
+      <line x1="-170" y1="0" x2="-120" y2="0"/>
+      <line x1="170" y1="0" x2="120" y2="0"/>
+      <line x1="120" y1="-120" x2="88" y2="-88"/>
+      <line x1="-120" y1="120" x2="-88" y2="88"/>
+      <line x1="-120" y1="-120" x2="-88" y2="-88"/>
+      <line x1="120" y1="120" x2="88" y2="88"/>
+    </g>
+    <g stroke-width="3" opacity="0.92">
+      <line x1="0" y1="-206" x2="0" y2="-176"/>
+      <line x1="0" y1="206" x2="0" y2="176"/>
+      <line x1="-206" y1="0" x2="-176" y2="0"/>
+      <line x1="206" y1="0" x2="176" y2="0"/>
+      <line x1="146" y1="-146" x2="126" y2="-126"/>
+      <line x1="-146" y1="146" x2="-126" y2="126"/>
+      <line x1="-146" y1="-146" x2="-126" y2="-126"/>
+      <line x1="146" y1="146" x2="126" y2="126"/>
+    </g>
+  </g>
+
+  <g fill="#f1c96b" opacity="0.76">
+    <circle cx="124" cy="216" r="2"/><circle cx="182" cy="260" r="2"/><circle cx="540" cy="308" r="2"/>
+    <circle cx="96" cy="420" r="2"/><circle cx="186" cy="622" r="2"/><circle cx="520" cy="672" r="2"/>
+    <circle cx="118" cy="832" r="2"/><circle cx="212" cy="910" r="2"/><circle cx="508" cy="872" r="2"/>
+  </g>
+</svg>
