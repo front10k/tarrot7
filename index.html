@@ -16,7 +16,6 @@
     
     <!-- Babel -->
     <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script defer src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     
     <!-- Tailwind CSS -->
     <script defer src="https://cdn.tailwindcss.com?plugins=forms,container-queries,line-clamp"></script>
@@ -1695,6 +1694,25 @@
                 .map((axis) => `#${keywordMap[axis.key]}`);
         };
 
+        const loadHtml2Canvas = () => {
+            if (window.html2canvas) return Promise.resolve(window.html2canvas);
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector('script[data-html2canvas-loader="1"]');
+                if (existing) {
+                    existing.addEventListener('load', () => resolve(window.html2canvas));
+                    existing.addEventListener('error', reject);
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js';
+                script.defer = true;
+                script.dataset.html2canvasLoader = '1';
+                script.onload = () => resolve(window.html2canvas);
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        };
+
         const AXIS = [
             { key: 'speed', label: '속도/결단' },
             { key: 'risk', label: '리스크' },
@@ -2240,11 +2258,9 @@
                 try {
                     const target = exportCardRef.current;
                     if (!target) return;
-                    if (!window.html2canvas) {
-                        alert('이미지 저장 라이브러리를 찾을 수 없습니다.');
-                        return;
-                    }
-                    const canvas = await window.html2canvas(target, {
+                    const html2canvas = await loadHtml2Canvas();
+                    if (!html2canvas) throw new Error('html2canvas unavailable');
+                    const canvas = await html2canvas(target, {
                         scale: 3,
                         backgroundColor: '#f8f6f2',
                         useCORS: true,
