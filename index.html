@@ -1405,7 +1405,7 @@
         );
 
         const TAROT78 = [...MAJOR_ARCANA, ...MINOR_ARCANA];
-        const TAROT_BACK_IMAGE = 'front.png';
+        const TAROT_BACK_IMAGE = 'card_back_purple.svg';
         const SPREAD = [
             { key: 'past', label: '과거' },
             { key: 'present', label: '현재' },
@@ -2114,7 +2114,7 @@
                     <main className="flex-1 px-5 pt-4 pb-28 overflow-y-auto">
                         <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 overflow-x-auto no-scrollbar">
                             <div className="flex gap-1.5 min-w-max">
-                                {Array.from({ length: 18 }, (_, idx) => (
+                                {Array.from({ length: 12 }, (_, idx) => (
                                     <div key={idx} className="w-[52px] h-[78px] rounded-lg overflow-hidden border border-slate-300/80 dark:border-slate-600/80 shadow-sm">
                                         <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url('${TAROT_BACK_IMAGE}')` }}></div>
                                     </div>
