@@ -1832,18 +1832,18 @@
                             <div className="text-sm font-extrabold text-slate-900 dark:text-white">{title}</div>
                             <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">개인화 점수(0~100) 기준</div>
                         </div>
-                        <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">{inv.label}</span>
+                        <span className="px-3 py-1.5 rounded-full text-xs font-extrabold bg-primary text-white border border-primary shadow-sm">{inv.label}</span>
                     </div>
                     <div className="space-y-3">
                         {AXIS.map((a) => {
                             const v = Math.round(scores?.[a.key] ?? 50);
                             return (
                                 <div key={a.key}>
-                                    <div className="flex items-center justify-between mb-1">
+                                    <div className="flex items-center justify-between mb-1.5">
                                         <div className="text-xs font-semibold text-slate-700 dark:text-slate-200">{a.label}</div>
-                                        <div className="text-xs font-bold text-slate-600 dark:text-slate-300">{v}</div>
+                                        <div className="text-sm font-black text-slate-700 dark:text-slate-100">{v}</div>
                                     </div>
-                                    <div className="h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                                    <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                                         <div className={`h-full ${barClass(v)} rounded-full`} style={{ width: `${v}%` }} />
                                     </div>
                                 </div>
@@ -2303,12 +2303,12 @@
                                 <div className="mt-4 space-y-3">
                                     {axisNarratives.map((n) => (
                                         <div key={n.key} className="rounded-xl border border-slate-200/80 dark:border-white/10 p-4 bg-white/70 dark:bg-black/10 shadow-sm">
-                                            <div className="flex items-center justify-between gap-3 mb-2">
+                                            <div className="flex items-center justify-between gap-3 mb-2.5">
                                                 <div className="text-sm font-extrabold text-slate-800 dark:text-slate-100">{n.label}</div>
-                                                <div className="px-2.5 py-1 rounded-full text-sm font-black bg-primary/12 border border-primary/25 text-primary">{n.value}</div>
+                                                <div className="min-w-[62px] text-center px-3 py-1 rounded-full text-base font-black bg-primary text-white border border-primary shadow-sm">{n.value}</div>
                                             </div>
-                                            <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden mb-3">
-                                                <div className="h-full bg-primary rounded-full" style={{ width: `${n.value}%` }}></div>
+                                            <div className="h-3 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden mb-3">
+                                                <div className="h-full bg-gradient-to-r from-primary to-primary-light rounded-full" style={{ width: `${n.value}%` }}></div>
                                             </div>
                                             <p className="text-sm leading-6 text-slate-700 dark:text-slate-200"><b>강점:</b> {n.strength}</p>
                                             <p className="mt-2 text-sm leading-6 text-rose-600 dark:text-rose-300"><b>주의:</b> {n.caution}</p>
@@ -2322,13 +2322,13 @@
                             <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-surface-light dark:bg-surface-dark p-5">
                                 <div className="text-sm font-bold text-slate-900 dark:text-white mb-3">실행 버튼</div>
                                 <div className="grid gap-2">
-                                    <button onClick={handleSaveStrategyImage} className="h-11 rounded-xl bg-primary text-white font-bold">
+                                    <button onClick={handleSaveStrategyImage} className="h-12 rounded-xl bg-primary hover:bg-violet-700 active:scale-[0.99] transition-all text-white font-extrabold shadow-md shadow-primary/30">
                                         내 전략 카드 PNG 저장
                                     </button>
-                                    <button onClick={() => alert('3개월 루틴 가이드를 생성했습니다.')} className="h-11 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-bold">
+                                    <button onClick={() => alert('3개월 루틴 가이드를 생성했습니다.')} className="h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] transition-all text-white font-extrabold shadow-md shadow-emerald-900/20">
                                         3개월 루틴 받기
                                     </button>
-                                    <button onClick={() => alert(personalizedScores.risk >= 60 ? '방어 모드 기준으로 재해석했습니다.' : '공격 모드 기준으로 재해석했습니다.')} className="h-11 rounded-xl border border-slate-300 dark:border-slate-700 font-bold text-slate-800 dark:text-slate-100">
+                                    <button onClick={() => alert(personalizedScores.risk >= 60 ? '방어 모드 기준으로 재해석했습니다.' : '공격 모드 기준으로 재해석했습니다.')} className="h-12 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-[0.99] transition-all font-extrabold text-white border border-slate-700 dark:bg-slate-200 dark:hover:bg-white dark:text-slate-900 dark:border-slate-100 shadow-sm">
                                         투자 모드(공격/방어)로 재해석
                                     </button>
                                 </div>
@@ -2337,7 +2337,7 @@
                     </main>
 
                     <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background-light via-background-light/95 to-transparent dark:from-background-dark dark:via-background-dark/95">
-                        <button onClick={() => navigate('/tarot')} className="w-full h-14 rounded-2xl font-bold text-lg bg-primary text-white shadow-glow active:scale-[0.98]">
+                        <button onClick={() => navigate('/tarot')} className="w-full h-14 rounded-2xl font-extrabold text-lg bg-primary hover:bg-violet-700 text-white shadow-lg shadow-primary/35 active:scale-[0.98] transition-all">
                             다시 시작하기
                         </button>
                     </div>
