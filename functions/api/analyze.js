@@ -4,6 +4,34 @@ function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function splitCsv(value) {
+  return normalizeText(value)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getAllowedOrigins(env, requestOrigin) {
+  const configured = splitCsv(env.ALLOWED_ORIGINS || "");
+  if (configured.length > 0) {
+    return new Set(configured);
+  }
+  return new Set([requestOrigin, "http://localhost:8787", "http://127.0.0.1:8787"]);
+}
+
+function buildCorsHeaders(origin, allowedOrigins) {
+  if (!origin || !allowedOrigins.has(origin)) {
+    return {};
+  }
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, X-API-Key",
+    "Access-Control-Max-Age": "86400",
+    Vary: "Origin",
+  };
+}
+
 function fallbackAnalysis(payload) {
   const picked = Array.isArray(payload?.pickedTarots) ? payload.pickedTarots : [];
   const pickedCards = payload?.pickedCards || {};
@@ -127,47 +155,99 @@ function json(data, status = 200) {
   });
 }
 
-export async function onRequestOptions() {
+function jsonWithCors(data, status, corsHeaders = {}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+      ...corsHeaders,
+    },
+  });
+}
+
+function validateApiRequest(request, env, allowedOrigins) {
+  const origin = normalizeText(request.headers.get("origin") || "");
+  if (!origin) {
+    return { status: 403, message: "Origin 헤더가 없는 요청은 허용되지 않습니다." };
+  }
+  if (!allowedOrigins.has(origin)) {
+    return { status: 403, message: "허용되지 않은 Origin입니다." };
+  }
+
+  const expectedApiKey = normalizeText(env.INTERNAL_API_KEY || "");
+  if (!expectedApiKey) {
+    return { status: 503, message: "서버 보안 설정(INTERNAL_API_KEY)이 필요합니다." };
+  }
+  const providedApiKey = normalizeText(request.headers.get("x-api-key") || "");
+  if (!providedApiKey || providedApiKey !== expectedApiKey) {
+    return { status: 401, message: "API 인증에 실패했습니다." };
+  }
+
+  const contentType = (request.headers.get("content-type") || "").toLowerCase();
+  if (!contentType.includes("application/json")) {
+    return { status: 415, message: "Content-Type은 application/json 이어야 합니다." };
+  }
+
+  const contentLength = Number(request.headers.get("content-length") || "0");
+  if (Number.isFinite(contentLength) && contentLength > MAX_API_BODY_BYTES) {
+    return { status: 413, message: "요청 본문이 너무 큽니다." };
+  }
+  return null;
+}
+
+async function readRequestJsonWithLimit(request) {
+  const raw = await request.text();
+  const byteLength = new TextEncoder().encode(raw).length;
+  if (byteLength > MAX_API_BODY_BYTES) {
+    const error = new Error("요청 본문이 너무 큽니다.");
+    error.status = 413;
+    throw error;
+  }
+  try {
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    const error = new Error("JSON 형식이 올바르지 않습니다.");
+    error.status = 400;
+    throw error;
+  }
+}
+
+export async function onRequestOptions(context) {
+  const requestOrigin = new URL(context.request.url).origin;
+  const allowedOrigins = getAllowedOrigins(context.env, requestOrigin);
+  const origin = context.request.headers.get("origin");
+  const corsHeaders = buildCorsHeaders(origin, allowedOrigins);
+  if (!origin || Object.keys(corsHeaders).length === 0) {
+    return jsonWithCors({ error: "허용되지 않은 Origin입니다." }, 403);
+  }
   return new Response(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, X-API-Key",
-      "Access-Control-Max-Age": "86400",
+      ...corsHeaders,
     },
   });
 }
 
 export async function onRequestPost(context) {
   const { request, env } = context;
-  const contentType = (request.headers.get("content-type") || "").toLowerCase();
-  if (!contentType.includes("application/json")) {
-    return json({ error: "Content-Type은 application/json 이어야 합니다." }, 415);
-  }
-
-  const contentLength = Number(request.headers.get("content-length") || "0");
-  if (Number.isFinite(contentLength) && contentLength > MAX_API_BODY_BYTES) {
-    return json({ error: "요청 본문이 너무 큽니다." }, 413);
-  }
-
-  let payload = {};
-  try {
-    payload = await request.json();
-  } catch {
-    return json({ error: "JSON 형식이 올바르지 않습니다." }, 400);
+  const requestOrigin = new URL(request.url).origin;
+  const allowedOrigins = getAllowedOrigins(env, requestOrigin);
+  const corsHeaders = buildCorsHeaders(request.headers.get("origin"), allowedOrigins);
+  const validationError = validateApiRequest(request, env, allowedOrigins);
+  if (validationError) {
+    return jsonWithCors({ error: validationError.message }, validationError.status, corsHeaders);
   }
 
   try {
+    const payload = await readRequestJsonWithLimit(request);
     const analysis = await callOpenAI(payload, env);
-    return json({ analysis, source: "openai" });
-  } catch {
-    return json(
-      {
-        analysis: fallbackAnalysis(payload),
-        source: "fallback",
-        warning: "분석 엔진 오류로 fallback 결과를 반환합니다.",
-      },
-      200
-    );
+    return jsonWithCors({ analysis, source: "openai" }, 200, corsHeaders);
+  } catch (error) {
+    const status = Number(error?.status || 0);
+    if (status === 400 || status === 413) {
+      return jsonWithCors({ error: error.message }, status, corsHeaders);
+    }
+    return jsonWithCors({ error: "분석 엔진 처리 중 오류가 발생했습니다." }, 502, corsHeaders);
   }
 }

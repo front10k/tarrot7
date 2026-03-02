@@ -1,6 +1,6 @@
 # Cloudflare 배포 가이드
 
-이 프로젝트는 `index.html` 정적 앱 + Worker API(`/api/analyze`) 형태로 Cloudflare에 배포할 수 있습니다.
+이 프로젝트는 `index.html` 정적 앱 + Pages Functions API(`/api/analyze`) 형태로 Cloudflare에 배포할 수 있습니다.
 
 ## 1) 사전 준비
 
@@ -58,7 +58,8 @@ npx wrangler deploy
 ## 4) 현재 구조
 
 - 정적 파일: 루트 디렉토리 (`index.html`, `assets/`)
-- Worker 엔트리: `worker.js`
+- Functions 엔트리: `functions/api/analyze.js`
+- 전역 보안 미들웨어: `functions/_middleware.js`
 - 설정: `wrangler.toml`
 
 `/api/analyze` 호출 시 `X-API-Key` 헤더가 필수입니다. 프론트에서 직접 호출할 경우 키 노출 위험이 있으므로, 서버 측 프록시(또는 토큰 교환 방식)로 호출하는 구성을 권장합니다.
