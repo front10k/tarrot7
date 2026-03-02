@@ -47,7 +47,7 @@ npx wrangler secret put INTERNAL_API_KEY
 
 `OPENAI_MODEL`은 선택 사항이며 미등록 시 기본값 `gpt-4.1-mini`를 사용합니다.
 `ALLOWED_ORIGINS`는 쉼표(`,`)로 여러 도메인을 설정할 수 있습니다.
-`INTERNAL_API_KEY`를 설정하면 `/api/analyze` 요청에 `X-API-Key` 헤더가 필수입니다.
+`INTERNAL_API_KEY`는 필수이며 `/api/analyze` 요청에 `X-API-Key` 헤더가 반드시 포함되어야 합니다.
 
 2. 배포:
 
@@ -61,12 +61,12 @@ npx wrangler deploy
 - Worker 엔트리: `worker.js`
 - 설정: `wrangler.toml`
 
-프론트엔드는 이미 `fetch('/api/analyze')`를 사용하므로 추가 수정 없이 Cloudflare URL에서 동작합니다.
+`/api/analyze` 호출 시 `X-API-Key` 헤더가 필수입니다. 프론트에서 직접 호출할 경우 키 노출 위험이 있으므로, 서버 측 프록시(또는 토큰 교환 방식)로 호출하는 구성을 권장합니다.
 
 ## 5) 적용된 보안
 
 - 허용 Origin 검증 (`ALLOWED_ORIGINS`)
-- 선택적 API 키 헤더 검증 (`X-API-Key`)
+- 필수 API 키 헤더 검증 (`X-API-Key`)
 - `application/json` Content-Type 강제
 - API Body 크기 제한 (100KB)
 - 기본 보안 헤더 추가

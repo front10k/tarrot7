@@ -21,6 +21,8 @@ const MIME = {
 };
 
 const MAX_API_BODY_BYTES = 100_000;
+const BLOCKED_STATIC_PREFIXES = ['/backend', '/scripts', '/.git', '/.idx', '/.devcontainer'];
+const BLOCKED_STATIC_SUFFIXES = ['.md', '.toml', '.nix', '.env', '.example'];
 
 function buildSecurityHeaders() {
   return {
@@ -28,6 +30,9 @@ function buildSecurityHeaders() {
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'no-referrer',
     'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+    'Content-Security-Policy':
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://lh3.googleusercontent.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; frame-ancestors 'none'; base-uri 'self';",
   };
 }
 
@@ -247,6 +252,10 @@ function sendStatic(reqPath, res) {
   if (relativePath === '/') {
     relativePath = '/index.html';
   }
+  if (isBlockedStaticPath(relativePath)) {
+    sendJson(res, 404, { error: '접근이 허용되지 않은 경로입니다.' });
+    return;
+  }
   const filePath = path.resolve(ROOT_DIR, `.${relativePath}`);
   if (!filePath.startsWith(ROOT_DIR)) {
     sendJson(res, 403, { error: '접근이 허용되지 않은 경로입니다.' });
@@ -268,18 +277,34 @@ function sendStatic(reqPath, res) {
   });
 }
 
+function isBlockedStaticPath(reqPath) {
+  const normalized = normalizeText(reqPath || '');
+  if (!normalized) return true;
+  if (normalized.includes('/..')) return true;
+  if (normalized.startsWith('/.') && !normalized.startsWith('/.well-known/')) return true;
+  if (BLOCKED_STATIC_PREFIXES.some((prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`))) {
+    return true;
+  }
+  const lowered = normalized.toLowerCase();
+  return BLOCKED_STATIC_SUFFIXES.some((suffix) => lowered.endsWith(suffix));
+}
+
 function validateApiRequest(req, allowedOrigins) {
   const origin = normalizeText(req.headers.origin || '');
-  if (origin && !allowedOrigins.has(origin)) {
+  if (!origin) {
+    return { status: 403, message: 'Origin 헤더가 없는 요청은 허용되지 않습니다.' };
+  }
+  if (!allowedOrigins.has(origin)) {
     return { status: 403, message: '허용되지 않은 Origin입니다.' };
   }
 
   const expectedApiKey = normalizeText(process.env.INTERNAL_API_KEY || '');
-  if (expectedApiKey) {
-    const providedApiKey = normalizeText(req.headers['x-api-key'] || '');
-    if (!providedApiKey || providedApiKey !== expectedApiKey) {
-      return { status: 401, message: 'API 인증에 실패했습니다.' };
-    }
+  if (!expectedApiKey) {
+    return { status: 503, message: '서버 보안 설정(INTERNAL_API_KEY)이 필요합니다.' };
+  }
+  const providedApiKey = normalizeText(req.headers['x-api-key'] || '');
+  if (!providedApiKey || providedApiKey !== expectedApiKey) {
+    return { status: 401, message: 'API 인증에 실패했습니다.' };
   }
 
   const contentType = normalizeText(req.headers['content-type'] || '').toLowerCase();

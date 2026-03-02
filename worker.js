@@ -3,6 +3,8 @@ function normalizeText(value) {
 }
 
 const MAX_API_BODY_BYTES = 100_000;
+const BLOCKED_ASSET_PREFIXES = ["/backend", "/scripts", "/.git", "/.idx", "/.devcontainer"];
+const BLOCKED_ASSET_SUFFIXES = [".md", ".toml", ".nix", ".env", ".example"];
 
 function splitCsv(value) {
   return normalizeText(value)
@@ -25,6 +27,9 @@ function buildSecurityHeaders() {
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+    "Content-Security-Policy":
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://lh3.googleusercontent.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com; frame-ancestors 'none'; base-uri 'self';",
   };
 }
 
@@ -73,18 +78,34 @@ function getRequestBodySize(request) {
   return Number.isFinite(contentLength) ? contentLength : 0;
 }
 
+function isBlockedAssetPath(pathname) {
+  const normalized = normalizeText(pathname || "");
+  if (!normalized) return true;
+  if (normalized.includes("/..")) return true;
+  if (normalized.startsWith("/.") && !normalized.startsWith("/.well-known/")) return true;
+  if (BLOCKED_ASSET_PREFIXES.some((prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`))) {
+    return true;
+  }
+  const lowered = normalized.toLowerCase();
+  return BLOCKED_ASSET_SUFFIXES.some((suffix) => lowered.endsWith(suffix));
+}
+
 function validateApiRequest(request, env, allowedOrigins) {
   const origin = request.headers.get("origin");
-  if (origin && !allowedOrigins.has(origin)) {
+  if (!origin) {
+    return { status: 403, message: "Origin 헤더가 없는 요청은 허용되지 않습니다." };
+  }
+  if (!allowedOrigins.has(origin)) {
     return { status: 403, message: "허용되지 않은 Origin입니다." };
   }
 
   const expectedApiKey = normalizeText(env.INTERNAL_API_KEY || "");
-  if (expectedApiKey) {
-    const providedApiKey = normalizeText(request.headers.get("x-api-key") || "");
-    if (!providedApiKey || providedApiKey !== expectedApiKey) {
-      return { status: 401, message: "API 인증에 실패했습니다." };
-    }
+  if (!expectedApiKey) {
+    return { status: 503, message: "서버 보안 설정(INTERNAL_API_KEY)이 필요합니다." };
+  }
+  const providedApiKey = normalizeText(request.headers.get("x-api-key") || "");
+  if (!providedApiKey || providedApiKey !== expectedApiKey) {
+    return { status: 401, message: "API 인증에 실패했습니다." };
   }
 
   const contentType = (request.headers.get("content-type") || "").toLowerCase();
@@ -184,8 +205,7 @@ async function callOpenAI(payload, env) {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`OpenAI API 오류 (${response.status}): ${errorText}`);
+    throw new Error(`OpenAI API 오류 (${response.status})`);
   }
 
   const data = await response.json();
@@ -202,28 +222,34 @@ async function callOpenAI(payload, env) {
   }
 }
 
-async function handleAnalyze(request, env, responseHeaders) {
-  let payload = {};
-  try {
-    payload = await request.json();
-  } catch {
-    return jsonResponse({ error: "JSON 형식이 올바르지 않습니다." }, 400, responseHeaders);
+async function readRequestJsonWithLimit(request) {
+  const raw = await request.text();
+  const byteLength = new TextEncoder().encode(raw).length;
+  if (byteLength > MAX_API_BODY_BYTES) {
+    const error = new Error("요청 본문이 너무 큽니다.");
+    error.status = 413;
+    throw error;
   }
-
   try {
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    const error = new Error("JSON 형식이 올바르지 않습니다.");
+    error.status = 400;
+    throw error;
+  }
+}
+
+async function handleAnalyze(request, env, responseHeaders) {
+  try {
+    const payload = await readRequestJsonWithLimit(request);
     const analysis = await callOpenAI(payload, env);
     return jsonResponse({ analysis, source: "openai" }, 200, responseHeaders);
   } catch (error) {
-    const analysis = fallbackAnalysis(payload);
-    return jsonResponse(
-      {
-        analysis,
-        source: "fallback",
-        warning: "분석 엔진 오류로 fallback 결과를 반환합니다.",
-      },
-      200,
-      responseHeaders
-    );
+    const status = Number(error?.status || 0);
+    if (status === 400 || status === 413) {
+      return jsonResponse({ error: error.message }, status, responseHeaders);
+    }
+    return jsonResponse({ error: "분석 엔진 처리 중 오류가 발생했습니다." }, 502, responseHeaders);
   }
 }
 
@@ -254,6 +280,10 @@ export default {
 
     if (request.method !== "GET" && request.method !== "HEAD") {
       return jsonResponse({ error: "허용되지 않은 메서드입니다." }, 405, corsHeaders);
+    }
+
+    if (isBlockedAssetPath(url.pathname)) {
+      return jsonResponse({ error: "접근이 허용되지 않은 경로입니다." }, 404, corsHeaders);
     }
 
     const staticResponse = await env.ASSETS.fetch(request);

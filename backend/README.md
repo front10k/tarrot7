@@ -29,8 +29,8 @@ node backend/server.js
 - Do not put real API keys in frontend code.
 - `backend/.env` is gitignored.
 - If `OPENAI_API_KEY` is missing, `/api/analyze` returns an explicit error message.
-- `ALLOWED_ORIGINS` is optional. If set, only listed origins can call `/api/analyze`.
-- `INTERNAL_API_KEY` is optional. If set, requests must include `X-API-Key`.
+- `ALLOWED_ORIGINS` must be set to trusted origins only.
+- `INTERNAL_API_KEY` is required. Requests to `/api/analyze` must include `X-API-Key`.
 
 Example env:
 
