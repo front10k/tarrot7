@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350">
+  <defs>
+    <linearGradient id="skyC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d4d9df"/>
+      <stop offset="100%" stop-color="#7c8796"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4f5966"/>
+      <stop offset="100%" stop-color="#2f3641"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1080" height="1350" fill="url(#skyC)"/>
+
+  <g fill="#4c5563" opacity="0.95">
+    <rect x="34" y="410" width="140" height="430"/>
+    <rect x="170" y="360" width="120" height="480"/>
+    <rect x="290" y="300" width="160" height="540"/>
+    <rect x="450" y="340" width="118" height="500"/>
+    <rect x="568" y="250" width="166" height="590"/>
+    <rect x="734" y="330" width="110" height="510"/>
+    <rect x="844" y="278" width="138" height="562"/>
+    <rect x="982" y="392" width="90" height="448"/>
+  </g>
+
+  <g fill="#c4d1db" opacity="0.55">
+    <rect x="64" y="450" width="16" height="20"/><rect x="96" y="450" width="16" height="20"/><rect x="128" y="450" width="16" height="20"/>
+    <rect x="320" y="360" width="18" height="22"/><rect x="356" y="360" width="18" height="22"/><rect x="392" y="360" width="18" height="22"/>
+    <rect x="604" y="314" width="18" height="22"/><rect x="640" y="314" width="18" height="22"/><rect x="676" y="314" width="18" height="22"/>
+    <rect x="870" y="332" width="18" height="22"/><rect x="906" y="332" width="18" height="22"/><rect x="942" y="332" width="18" height="22"/>
+  </g>
+
+  <rect x="0" y="840" width="1080" height="510" fill="url(#road)"/>
+  <path d="M0 940 C180 900, 360 980, 540 936 C740 886, 900 960, 1080 922 L1080 1120 L0 1120 Z" fill="#566272" opacity="0.72"/>
+
+  <g fill="#243443" opacity="0.95">
+    <path d="M536 780 L606 998 L464 998 Z"/>
+    <ellipse cx="536" cy="738" rx="44" ry="46"/>
+    <path d="M458 996 L620 996 L680 1260 L400 1260 Z"/>
+  </g>
+
+  <path d="M492 836 L614 856 L604 896 L484 870 Z" fill="#b2463a" opacity="0.9"/>
+  <path d="M534 856 L678 946 L640 1002 L516 890 Z" fill="#c59f61" opacity="0.86"/>
+
+  <g stroke="#d3dde7" stroke-width="3" opacity="0.3" fill="none">
+    <path d="M220 868 C390 788, 620 790, 860 852"/>
+    <path d="M230 912 C400 832, 630 834, 870 896"/>
+  </g>
+</svg>
